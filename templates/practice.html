@@ -53,6 +53,43 @@
                                 </label>
                             </div>
                         </div>
+                        {% elif exercise_type == 'scale_degree' %}
+                        <div class="form-group">
+                            <label>🎼 选择音阶：</label>
+                            <select name="scale_type" class="form-select">
+                                {% for scale_key, scale_info in scales.items() %}
+                                <option value="{{ scale_key }}" {% if scale_key == 'major' %}selected{% endif %}>
+                                    {{ scale_info.name }} ({{ scale_info.name_en }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>🎹 选择调性：</label>
+                            <select name="key" class="form-select">
+                                {% for key in keys %}
+                                <option value="{{ key }}" {% if key == 'C' %}selected{% endif %}>{{ key }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>🎚️ 起始八度：</label>
+                            <select name="octave" class="form-select">
+                                <option value="3">3</option>
+                                <option value="4" selected>4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>🎹 八度范围：</label>
+                            <select name="octave_range" class="form-select">
+                                <option value="1" selected>一个八度</option>
+                                <option value="2">两个八度</option>
+                            </select>
+                            <p style="font-size: 11px; color: var(--hf-text-tertiary); margin-top: 4px;">
+                                两个八度时，题目可能包含第二个八度的音（如9音、10音等）
+                            </p>
+                        </div>
                         {% endif %}
                         <div class="form-group">
                             <label>🔢 题目数量：</label>

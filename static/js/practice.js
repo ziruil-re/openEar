@@ -33,15 +33,26 @@ if (selectAllIntervals) {
 function applySettings() {
     const form = document.getElementById('settings-form');
     const formData = new FormData(form);
+    const exerciseType = window.location.pathname.split('/').pop();
+    window.exerciseType = exerciseType;
     
     const settings = {
-        intervals: formData.getAll('intervals'),
-        directions: formData.getAll('directions'),
         total_questions: formData.get('total_questions')
     };
     
+    if (exerciseType === 'interval') {
+        settings.intervals = formData.getAll('intervals');
+        settings.directions = formData.getAll('directions');
+    } else if (exerciseType === 'scale_degree') {
+        settings.scale_type = formData.get('scale_type');
+        settings.key = formData.get('key');
+        settings.octave = formData.get('octave');
+        settings.octave_range = formData.get('octave_range');
+    }
+    
     // 保存到sessionStorage
     sessionStorage.setItem('practice_settings', JSON.stringify(settings));
+    window.currentSettings = settings;
     
     // 重新加载题目
     loadQuestion();
@@ -61,20 +72,37 @@ function loadQuestion() {
     
     // 获取设置
     const settings = JSON.parse(sessionStorage.getItem('practice_settings') || '{}');
-    const intervals = settings.intervals || [];
-    const directions = settings.directions || ['up', 'down'];
-    
-    // 构建请求参数
-    const params = new URLSearchParams();
-    if (intervals.length > 0) {
-        params.append('intervals', intervals.join(','));
-    }
-    if (directions.length > 0) {
-        params.append('directions', directions.join(','));
-    }
+    window.currentSettings = settings;
     
     // 获取当前练习类型
     const exerciseType = window.location.pathname.split('/').pop();
+    window.exerciseType = exerciseType;
+    
+    // 构建请求参数
+    const params = new URLSearchParams();
+    if (exerciseType === 'interval') {
+        const intervals = settings.intervals || [];
+        const directions = settings.directions || ['up', 'down'];
+        if (intervals.length > 0) {
+            params.append('intervals', intervals.join(','));
+        }
+        if (directions.length > 0) {
+            params.append('directions', directions.join(','));
+        }
+    } else if (exerciseType === 'scale_degree') {
+        if (settings.scale_type) {
+            params.append('scale_type', settings.scale_type);
+        }
+        if (settings.key) {
+            params.append('key', settings.key);
+        }
+        if (settings.octave) {
+            params.append('octave', settings.octave);
+        }
+        if (settings.octave_range) {
+            params.append('octave_range', settings.octave_range);
+        }
+    }
     
     // 调用API获取题目
     fetch(`/api/generate_question/${exerciseType}?${params.toString()}`)
@@ -96,30 +124,75 @@ function loadQuestion() {
 function displayQuestion(data) {
     window.currentQuestion = data;
     const questionArea = document.getElementById('question-area');
+    const exerciseType = window.exerciseType;
     
-    questionArea.innerHTML = `
-        <div class="audio-player-container">
-            <h3>🎧 请听音程，选择正确的音程名称：</h3>
-            <audio id="audioPlayer" controls preload="auto">
-                <source src="/static/audio/${data.audio_file}" type="audio/wav">
-                您的浏览器不支持音频播放。
-            </audio>
-            <br>
-            <button class="btn" onclick="playAudio()">
-                <span>▶️</span> 播放音频
-            </button>
-        </div>
-        
-        <div class="options-grid" id="options-grid">
-            ${data.options.map((option, index) => `
-                <button class="option-btn" onclick="selectAnswer('${data.option_values[index]}')">
-                    ${option}
+    let questionHtml = '';
+    
+    if (exerciseType === 'interval') {
+        questionHtml = `
+            <div class="audio-player-container">
+                <h3>🎧 请听音程，选择正确的音程名称：</h3>
+                <audio id="audioPlayer" controls preload="auto">
+                    <source src="/static/audio/${data.audio_file}" type="audio/wav">
+                    您的浏览器不支持音频播放。
+                </audio>
+                <br>
+                <button class="btn" onclick="playAudio()">
+                    <span>▶️</span> 播放音频
                 </button>
-            `).join('')}
-        </div>
-        
-        <div id="result-message" style="display: none;"></div>
-    `;
+            </div>
+            <div class="options-grid" id="options-grid">
+                ${data.options.map((option, index) => `
+                    <button class="option-btn" onclick="selectAnswer('${data.option_values[index]}')">
+                        ${option}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    } else if (exerciseType === 'scale_degree') {
+        questionHtml = `
+            <div class="audio-player-container">
+                <h3>🎧 请听音符，选择它在音阶中的音级：</h3>
+                <p style="font-size: 13px; color: var(--hf-text-secondary); margin-bottom: 12px;">
+                    当前音阶：<strong>${data.scale_name || ''}</strong>
+                </p>
+                <audio id="audioPlayer" controls preload="auto">
+                    <source src="/static/audio/${data.audio_file}" type="audio/wav">
+                    您的浏览器不支持音频播放。
+                </audio>
+                <br>
+                <button class="btn" onclick="playAudio()">
+                    <span>▶️</span> 播放题目音频
+                </button>
+            </div>
+            <div class="reference-audio-container" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--hf-border);">
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--hf-text-primary);">参考音频：</h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="font-size: 12px; color: var(--hf-text-secondary); margin-bottom: 6px; display: block;">根音：</label>
+                        <audio controls preload="auto" style="width: 100%;">
+                            <source src="/static/audio/${data.root_audio_file}" type="audio/wav">
+                        </audio>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="font-size: 12px; color: var(--hf-text-secondary); margin-bottom: 6px; display: block;">完整音阶：</label>
+                        <audio controls preload="auto" style="width: 100%;">
+                            <source src="/static/audio/${data.scale_audio_file}" type="audio/wav">
+                        </audio>
+                    </div>
+                </div>
+            </div>
+            <div class="options-grid" id="options-grid" style="margin-top: 24px;">
+                ${data.options.map((option) => `
+                    <button class="option-btn" onclick="selectAnswer('${option}')">
+                        ${option}
+                    </button>
+                `).join('')}
+            </div>
+        `;
+    }
+    
+    questionArea.innerHTML = questionHtml + '<div id="result-message" style="display: none;"></div>';
 }
 
 // 选择答案

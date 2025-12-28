@@ -82,30 +82,68 @@ for octave in octaves:
     for note in note_letters:
         NOTE_NAMES.append(f"{note}{octave}")
 
+# 音阶定义（半音数序列，从根音开始）
+SCALES = {
+    'major': {
+        'name': '大调',
+        'name_en': 'Major',
+        'pattern': [0, 2, 4, 5, 7, 9, 11],  # 全全半全全全半
+        'degrees': ['1', '2', '3', '4', '5', '6', '7']
+    },
+    'minor': {
+        'name': '小调',
+        'name_en': 'Minor',
+        'pattern': [0, 2, 3, 5, 7, 8, 10],  # 全半全全半全全
+        'degrees': ['1', '2', 'b3', '4', '5', 'b6', 'b7']
+    },
+    'pentatonic_major': {
+        'name': '大调五声音阶',
+        'name_en': 'Major Pentatonic',
+        'pattern': [0, 2, 4, 7, 9],
+        'degrees': ['1', '2', '3', '5', '6']
+    },
+    'pentatonic_minor': {
+        'name': '小调五声音阶',
+        'name_en': 'Minor Pentatonic',
+        'pattern': [0, 3, 5, 7, 10],
+        'degrees': ['1', 'b3', '4', '5', 'b7']
+    },
+    'dorian': {
+        'name': '多利亚调式',
+        'name_en': 'Dorian',
+        'pattern': [0, 2, 3, 5, 7, 9, 10],
+        'degrees': ['1', '2', 'b3', '4', '5', '6', 'b7']
+    },
+    'mixolydian': {
+        'name': '混合利底亚调式',
+        'name_en': 'Mixolydian',
+        'pattern': [0, 2, 4, 5, 7, 9, 10],
+        'degrees': ['1', '2', '3', '4', '5', '6', 'b7']
+    },
+    'blues': {
+        'name': '布鲁斯音阶',
+        'name_en': 'Blues',
+        'pattern': [0, 3, 5, 6, 7, 10],
+        'degrees': ['1', 'b3', '4', 'b5', '5', 'b7']
+    }
+}
+
+# 调性（12个调）
+KEYS = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+
 def generate_interval_audio(note1, note2, duration=1.0):
     """生成音程音频文件"""
     try:
         import numpy as np
         from scipy.io import wavfile
         
-        # 音频文件路径 - 检查多个可能的位置
-        note1_path = os.path.join(basedir, 'static', 'audio', 'notes', f"{note1}.wav")
-        note2_path = os.path.join(basedir, 'static', 'audio', 'notes', f"{note2}.wav")
+        # 音频文件路径
+        notes_dir = os.path.join(basedir, 'static', 'audio', 'notes')
+        note1_path = os.path.join(notes_dir, f"{note1}.wav")
+        note2_path = os.path.join(notes_dir, f"{note2}.wav")
         
-        # 如果不存在，尝试从Hearzy目录复制
-        if not os.path.exists(note1_path):
-            hearzy_path = os.path.join(basedir, '..', 'Hearzy', 'static', 'audio', 'notes', f"{note1}.wav")
-            if os.path.exists(hearzy_path):
-                import shutil
-                os.makedirs(os.path.dirname(note1_path), exist_ok=True)
-                shutil.copy(hearzy_path, note1_path)
-        
-        if not os.path.exists(note2_path):
-            hearzy_path = os.path.join(basedir, '..', 'Hearzy', 'static', 'audio', 'notes', f"{note2}.wav")
-            if os.path.exists(hearzy_path):
-                import shutil
-                os.makedirs(os.path.dirname(note2_path), exist_ok=True)
-                shutil.copy(hearzy_path, note2_path)
+        if not os.path.exists(note1_path) or not os.path.exists(note2_path):
+            return False
         
         # 使用安全的文件名（替换 # 为 sharp）
         safe_note1 = note1.replace('#', 'sharp')
@@ -209,124 +247,320 @@ def practice(exercise_type):
                          exercise_type=exercise_type,
                          exercise_info=EXERCISE_TYPES[exercise_type],
                          intervals=INTERVALS,
+                         scales=SCALES,
+                         keys=KEYS,
                          tips=tips_data.get(exercise_type, {}),
                          songs=songs_data.get(exercise_type, {}),
                          current_user=current_user)
 
+def generate_scale_audio(root_note, scale_type, octave=4, octave_range=1):
+    """生成音阶音频文件（一个八度，从根音到根音）
+    
+    Args:
+        root_note: 根音（如 'C'）
+        scale_type: 音阶类型（如 'major'）
+        octave: 起始八度（如 4）
+        octave_range: 八度范围（此参数保留用于兼容，但参考音频只生成一个八度）
+    """
+    try:
+        import numpy as np
+        from scipy.io import wavfile
+        
+        if scale_type not in SCALES:
+            return False
+        
+        scale_pattern = SCALES[scale_type]['pattern']
+        root_idx = KEYS.index(root_note)
+        
+        # 构建一个八度的音阶音符（从根音到根音）
+        scale_notes = []
+        for semitone_offset in scale_pattern:
+            note_idx = (root_idx + semitone_offset) % 12
+            note_name = note_letters[note_idx]
+            # 计算实际八度
+            actual_octave = octave + (root_idx + semitone_offset) // 12
+            scale_notes.append(f"{note_name}{actual_octave}")
+        
+        # 在最后添加根音（高八度）
+        root_note_octave = octave + 1
+        scale_notes.append(f"{root_note}{root_note_octave}")
+        
+        # 读取所有音符的音频
+        audio_segments = []
+        sample_rate = None
+        
+        notes_dir = os.path.join(basedir, 'static', 'audio', 'notes')
+        
+        for note in scale_notes:
+            note_path = os.path.join(notes_dir, f"{note}.wav")
+            
+            if not os.path.exists(note_path):
+                return False
+            
+            sr, audio = wavfile.read(note_path)
+            if sample_rate is None:
+                sample_rate = sr
+            
+            # 处理多声道
+            if len(audio.shape) > 1:
+                audio = audio[:, 0]
+            
+            # 取前0.5秒
+            samples = int(sample_rate * 0.5)
+            audio_seg = audio[:min(samples, len(audio))]
+            if len(audio_seg) < samples:
+                padding = np.zeros(samples - len(audio_seg), dtype=audio_seg.dtype)
+                audio_seg = np.concatenate([audio_seg, padding])
+            
+            audio_segments.append(audio_seg)
+        
+        # 拼接所有音符（从根音到根音）
+        combined_audio = np.concatenate(audio_segments)
+        
+        # 保存音频文件
+        safe_root = root_note.replace('#', 'sharp')
+        safe_scale = scale_type.replace('_', '-')
+        scale_dir = os.path.join(basedir, 'static', 'audio', 'scale')
+        os.makedirs(scale_dir, exist_ok=True)
+        output_path = os.path.join(scale_dir, f"{safe_root}_{safe_scale}_oct{octave}_range{octave_range}.wav")
+        wavfile.write(output_path, sample_rate, combined_audio)
+        
+        return True
+        
+    except Exception as e:
+        print(f"生成音阶音频失败: {e}")
+        return False
+
 @app.route('/api/generate_question/<exercise_type>')
 def generate_question(exercise_type):
     """生成题目"""
-    if exercise_type != 'interval':
-        return jsonify({'status': 'error', 'message': '该练习类型暂未实现'})
-    
-    # 获取前端传来的参数
-    intervals = request.args.get('intervals', '')
-    directions = request.args.get('directions', '')
-    
-    if intervals:
-        allowed_intervals = intervals.split(',')
-    else:
-        allowed_intervals = [v['name'] for v in INTERVALS.values() if v['name'] != 'unison']
-    
-    if directions:
-        allowed_directions = directions.split(',')
-    else:
-        allowed_directions = ['up', 'down']
-    
-    # 预先生成所有合法组合
-    valid_pairs = []
-    for note1_idx in range(len(NOTE_NAMES)):
-        for direction in allowed_directions:
-            for semitones, interval in INTERVALS.items():
-                if interval['name'] not in allowed_intervals:
-                    continue
-                if direction == 'up':
-                    note2_idx = note1_idx + semitones
-                else:
-                    note2_idx = note1_idx - semitones
-                if 0 <= note2_idx < len(NOTE_NAMES) and semitones != 0:
-                    valid_pairs.append((note1_idx, note2_idx, semitones, interval, direction))
-    
-    if not valid_pairs:
-        return jsonify({'status': 'error', 'msg': '没有符合条件的题目，请调整选择'})
-    
-    # 随机抽取一个组合
-    note1_idx, note2_idx, semitones, interval_info, direction = random.choice(valid_pairs)
-    note1 = NOTE_NAMES[note1_idx]
-    note2 = NOTE_NAMES[note2_idx]
-    
-    # 计算音程
-    semitones = abs(note2_idx - note1_idx)
-    interval_info = INTERVALS.get(semitones, INTERVALS[0])
-    
-    # 检查对应的音程音频文件是否存在
-    safe_note1 = note1.replace('#', 'sharp')
-    safe_note2 = note2.replace('#', 'sharp')
-    audio_file = f"interval/{safe_note1}_{safe_note2}_1sec.wav"
-    audio_path = os.path.join(basedir, 'static', 'audio', audio_file)
-    
-    # 如果不存在，就生成这个音程的音频文件
-    if not os.path.exists(audio_path):
-        success = generate_interval_audio(note1, note2)
-        if not success:
-            # 如果生成失败，返回错误而不是使用单个音符
-            return jsonify({
-                'status': 'error',
-                'msg': f'无法生成音程音频: {note1} - {note2}，请检查音频文件是否存在'
-            })
-    
-    # 准备选项
-    all_intervals = list(INTERVALS.values())
-    correct_answer = interval_info['name']
-    
-    # 根据 allowed_intervals 控制选项范围
-    allowed_intervals_set = set(allowed_intervals)
-    allowed_interval_names = [interval['name'] for interval in all_intervals if interval['name'] in allowed_intervals_set]
-    
-    if len(allowed_interval_names) <= 4:
-        # 如果允许的音程数量少于等于4个，全部使用
-        options = allowed_interval_names.copy()
-        # 确保正确答案在选项中
-        if correct_answer not in options:
-            if len(options) < 4:
-                options.append(correct_answer)
-            else:
-                options[0] = correct_answer
-        # 如果选项不足4个，从所有音程中补充
-        while len(options) < 4:
-            all_interval_names = [interval['name'] for interval in all_intervals if interval['name'] != 'unison']
-            additional = [name for name in all_interval_names if name not in options]
-            if additional:
-                options.append(random.choice(additional))
-            else:
-                break
-        random.shuffle(options)
-    else:
-        # 如果允许的音程数量超过4个，随机选择3个错误答案+1个正确答案
-        wrong_options = [name for name in allowed_interval_names if name != correct_answer]
-        if len(wrong_options) >= 3:
-            options = random.sample(wrong_options, 3) + [correct_answer]
+    if exercise_type == 'interval':
+        # 获取前端传来的参数
+        intervals = request.args.get('intervals', '')
+        directions = request.args.get('directions', '')
+        
+        if intervals:
+            allowed_intervals = intervals.split(',')
         else:
-            options = wrong_options + [correct_answer]
-            # 如果还不够4个，从所有音程中补充
-            all_interval_names = [interval['name'] for interval in all_intervals if interval['name'] != 'unison']
+            allowed_intervals = [v['name'] for v in INTERVALS.values() if v['name'] != 'unison']
+        
+        if directions:
+            allowed_directions = directions.split(',')
+        else:
+            allowed_directions = ['up', 'down']
+        
+        # 预先生成所有合法组合
+        valid_pairs = []
+        for note1_idx in range(len(NOTE_NAMES)):
+            for direction in allowed_directions:
+                for semitones, interval in INTERVALS.items():
+                    if interval['name'] not in allowed_intervals:
+                        continue
+                    if direction == 'up':
+                        note2_idx = note1_idx + semitones
+                    else:
+                        note2_idx = note1_idx - semitones
+                    if 0 <= note2_idx < len(NOTE_NAMES) and semitones != 0:
+                        valid_pairs.append((note1_idx, note2_idx, semitones, interval, direction))
+        
+        if not valid_pairs:
+            return jsonify({'status': 'error', 'msg': '没有符合条件的题目，请调整选择'})
+        
+        # 随机抽取一个组合
+        note1_idx, note2_idx, semitones, interval_info, direction = random.choice(valid_pairs)
+        note1 = NOTE_NAMES[note1_idx]
+        note2 = NOTE_NAMES[note2_idx]
+        
+        # 计算音程
+        semitones = abs(note2_idx - note1_idx)
+        interval_info = INTERVALS.get(semitones, INTERVALS[0])
+        
+        # 检查对应的音程音频文件是否存在
+        safe_note1 = note1.replace('#', 'sharp')
+        safe_note2 = note2.replace('#', 'sharp')
+        audio_file = f"interval/{safe_note1}_{safe_note2}_1sec.wav"
+        audio_path = os.path.join(basedir, 'static', 'audio', audio_file)
+        
+        # 如果不存在，就生成这个音程的音频文件
+        if not os.path.exists(audio_path):
+            success = generate_interval_audio(note1, note2)
+            if not success:
+                # 如果生成失败，返回错误而不是使用单个音符
+                return jsonify({
+                    'status': 'error',
+                    'msg': f'无法生成音程音频: {note1} - {note2}，请检查音频文件是否存在'
+                })
+        
+        # 准备选项
+        all_intervals = list(INTERVALS.values())
+        correct_answer = interval_info['name']
+        
+        # 根据 allowed_intervals 控制选项范围
+        allowed_intervals_set = set(allowed_intervals)
+        allowed_interval_names = [interval['name'] for interval in all_intervals if interval['name'] in allowed_intervals_set]
+        
+        if len(allowed_interval_names) <= 4:
+            # 如果允许的音程数量少于等于4个，全部使用
+            options = allowed_interval_names.copy()
+            # 确保正确答案在选项中
+            if correct_answer not in options:
+                if len(options) < 4:
+                    options.append(correct_answer)
+                else:
+                    options[0] = correct_answer
+            # 如果选项不足4个，从所有音程中补充
             while len(options) < 4:
+                all_interval_names = [interval['name'] for interval in all_intervals if interval['name'] != 'unison']
                 additional = [name for name in all_interval_names if name not in options]
                 if additional:
                     options.append(random.choice(additional))
                 else:
                     break
-        random.shuffle(options)
+            random.shuffle(options)
+        else:
+            # 如果允许的音程数量超过4个，随机选择3个错误答案+1个正确答案
+            wrong_options = [name for name in allowed_interval_names if name != correct_answer]
+            if len(wrong_options) >= 3:
+                options = random.sample(wrong_options, 3) + [correct_answer]
+            else:
+                options = wrong_options + [correct_answer]
+                # 如果还不够4个，从所有音程中补充
+                all_interval_names = [interval['name'] for interval in all_intervals if interval['name'] != 'unison']
+                while len(options) < 4:
+                    additional = [name for name in all_interval_names if name not in options]
+                    if additional:
+                        options.append(random.choice(additional))
+                    else:
+                        break
+            random.shuffle(options)
+        
+        return jsonify({
+            'status': 'ok',
+            'audio_file': audio_file,
+            'options': [next((interval['cn'] for interval in all_intervals if interval['name'] == opt), opt) for opt in options],
+            'option_values': options,
+            'correct_answer': interval_info['cn'],
+            'correct_value': correct_answer,
+            'is_authenticated': current_user.is_authenticated
+        })
     
-    return jsonify({
-        'status': 'ok',
-        'audio_file': audio_file,
-        'options': [next((interval['cn'] for interval in all_intervals if interval['name'] == opt), opt) for opt in options],
-        'option_values': options,
-        'correct_answer': interval_info['cn'],
-        'correct_value': correct_answer,
-        'is_authenticated': current_user.is_authenticated
-    })
+    elif exercise_type == 'scale_degree':
+        # 获取前端传来的参数
+        scale_type = request.args.get('scale_type', 'major')
+        key = request.args.get('key', 'C')
+        octave = int(request.args.get('octave', '4'))
+        octave_range = int(request.args.get('octave_range', '1'))  # 1或2
+        
+        if scale_type not in SCALES:
+            return jsonify({'status': 'error', 'msg': '无效的音阶类型'})
+        
+        if key not in KEYS:
+            return jsonify({'status': 'error', 'msg': '无效的调性'})
+        
+        if octave_range not in [1, 2]:
+            octave_range = 1
+        
+        scale_info = SCALES[scale_type]
+        scale_pattern = scale_info['pattern']
+        base_degrees = scale_info['degrees']
+        
+        # 如果是两个八度，扩展音级名称
+        if octave_range == 2:
+            # 第一个八度：1, 2, 3, 4, 5, 6, 7
+            # 第二个八度：8, 9, 10, 11, 12, 13, 14 或者 1(高八度), 2(高八度)...
+            degrees = base_degrees + [f"{deg}(高八度)" for deg in base_degrees]
+        else:
+            degrees = base_degrees
+        
+        # 计算根音在NOTE_NAMES中的索引
+        root_idx = KEYS.index(key)
+        
+        # 构建音阶中的所有音符（支持一个或两个八度）
+        scale_notes = []
+        scale_note_indices = []
+        scale_degree_indices = []  # 记录每个音符对应的音级索引
+        
+        # 生成一个或两个八度的音
+        for octave_offset in range(octave_range):
+            for degree_idx, semitone_offset in enumerate(scale_pattern):
+                # 计算总的半音偏移
+                total_semitones = octave_offset * 12 + semitone_offset
+                note_idx_in_octave = (root_idx + total_semitones) % 12
+                note_letter = note_letters[note_idx_in_octave]
+                
+                # 计算实际八度
+                actual_octave = octave + (root_idx + total_semitones) // 12
+                note_name = f"{note_letter}{actual_octave}"
+                
+                # 找到在NOTE_NAMES中的索引
+                try:
+                    note_idx = NOTE_NAMES.index(note_name)
+                except ValueError:
+                    # 如果找不到，尝试其他八度
+                    for test_octave in [actual_octave-1, actual_octave, actual_octave+1]:
+                        test_note = f"{note_letter}{test_octave}"
+                        if test_note in NOTE_NAMES:
+                            note_idx = NOTE_NAMES.index(test_note)
+                            break
+                    else:
+                        continue
+                
+                scale_notes.append(note_name)
+                scale_note_indices.append(note_idx)
+                # 计算音级索引：第一个八度用原始索引，第二个八度用原始索引+len(base_degrees)
+                degree_index = degree_idx if octave_offset == 0 else degree_idx + len(base_degrees)
+                scale_degree_indices.append(degree_index)
+        
+        if not scale_notes:
+            return jsonify({'status': 'error', 'msg': '无法构建音阶'})
+        
+        # 随机选择一个音阶内的音作为题目
+        question_idx = random.randint(0, len(scale_notes) - 1)
+        question_note = scale_notes[question_idx]
+        correct_degree_idx = scale_degree_indices[question_idx]
+        correct_degree = degrees[correct_degree_idx]
+        
+        # 生成题目音频（只播放选中的音符）
+        safe_note = question_note.replace('#', 'sharp')
+        question_audio_file = f"notes/{safe_note}.wav"
+        question_audio_path = os.path.join(basedir, 'static', 'audio', question_audio_file)
+        
+        if not os.path.exists(question_audio_path):
+            return jsonify({'status': 'error', 'msg': f'音频文件不存在: {question_note}'})
+        
+        # 生成参考音频（根音和完整音阶）
+        safe_root = key.replace('#', 'sharp')
+        safe_scale = scale_type.replace('_', '-')
+        root_audio_file = f"notes/{safe_root}{octave}.wav"
+        scale_audio_file = f"scale/{safe_root}_{safe_scale}_oct{octave}_range{octave_range}.wav"
+        scale_audio_path = os.path.join(basedir, 'static', 'audio', scale_audio_file)
+        
+        # 如果音阶音频不存在，生成它
+        if not os.path.exists(scale_audio_path):
+            generate_scale_audio(key, scale_type, octave, octave_range)
+        
+        # 准备选项（音阶内的所有音级）
+        options = degrees.copy()
+        random.shuffle(options)
+        
+        # 构建音阶名称显示
+        range_text = "（两个八度）" if octave_range == 2 else "（一个八度）"
+        scale_name = f"{key} {scale_info['name']}{range_text}"
+        
+        return jsonify({
+            'status': 'ok',
+            'audio_file': question_audio_file,
+            'root_audio_file': root_audio_file,
+            'scale_audio_file': scale_audio_file,
+            'options': options,
+            'correct_answer': correct_degree,
+            'correct_value': correct_degree,
+            'scale_name': scale_name,
+            'is_authenticated': current_user.is_authenticated
+        })
+    
+    else:
+        return jsonify({'status': 'error', 'message': '该练习类型暂未实现'})
 
 @app.route('/api/submit_answer', methods=['POST'])
 def submit_answer():
