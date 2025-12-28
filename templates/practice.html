@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}{{ exercise_info.name }} - openEar{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/practice.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="practice-layout">
+    <!-- 左侧边栏 -->
+    <aside class="sidebar">
+        <div class="sidebar-tabs">
+            <button class="sidebar-tab active" data-tab="settings">设置</button>
+            <button class="sidebar-tab" data-tab="explanation">说明</button>
+            <button class="sidebar-tab" data-tab="listen">歌单</button>
+        </div>
+
+        <div class="sidebar-content">
+            <!-- Settings 标签页 -->
+            <div class="tab-content active" id="settings-tab">
+                <div class="sidebar-section">
+                    <h3>练习设置</h3>
+                    <form id="settings-form" class="settings-form">
+                        {% if exercise_type == 'interval' %}
+                        <div class="form-group">
+                            <label>选择音程：</label>
+                            <div class="checkbox-group">
+                                {% for semitone, interval in intervals.items() %}
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="intervals" value="{{ interval.name }}" checked>
+                                    <span>{{ interval.cn }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="select-all-intervals">
+                                    <strong>全选</strong>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>方向：</label>
+                            <div class="checkbox-group">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="directions" value="up" checked>
+                                    <span>上行</span>
+                                </label>
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="directions" value="down" checked>
+                                    <span>下行</span>
+                                </label>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="form-group">
+                            <label>题目数量：</label>
+                            <select name="total_questions" class="form-select">
+                                <option value="10">10题</option>
+                                <option value="20" selected>20题</option>
+                                <option value="30">30题</option>
+                                <option value="50">50题</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn" onclick="applySettings()">应用设置</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Explanation 标签页 -->
+            <div class="tab-content" id="explanation-tab">
+                <div class="sidebar-section">
+                    <h3>练习说明</h3>
+                    {% if tips.explanation %}
+                    <div class="explanation-content">
+                        {{ tips.explanation | safe }}
+                    </div>
+                    {% else %}
+                    <p>练习说明加载中...</p>
+                    {% endif %}
+                </div>
+                {% if tips.tips %}
+                <div class="sidebar-section">
+                    <h3>练习技巧</h3>
+                    <ul class="tips-list">
+                        {% for tip in tips.tips %}
+                        <li>{{ tip }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Listen 标签页 -->
+            <div class="tab-content" id="listen-tab">
+                <div class="sidebar-section">
+                    <h3>参考歌曲</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 16px;">
+                        以下歌曲可以帮助您更好地识别音程：
+                    </p>
+                    {% if songs %}
+                    <ul class="song-list">
+                        {% for interval_name, song_list in songs.items() %}
+                        <li class="song-category">
+                            <strong>{{ interval_name }}：</strong>
+                            <ul style="margin-top: 8px; margin-left: 20px;">
+                                {% for song in song_list %}
+                                <li class="song-item">
+                                    <a href="{{ song.url }}" target="_blank">{{ song.name }}</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p style="color: var(--text-secondary);">歌曲列表加载中...</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 右侧主练习区域 -->
+    <main class="main-practice-area">
+        <div class="practice-header">
+            <h1>{{ exercise_info.icon }} {{ exercise_info.name }}</h1>
+            <p>{{ exercise_info.description }}</p>
+        </div>
+
+        {% if not current_user.is_authenticated %}
+        <div class="auth-notice">
+            <p>ℹ️ 您当前未登录，练习记录不会被保存。<a href="{{ url_for('login') }}">登录</a>后可保存统计信息。</p>
+        </div>
+        {% endif %}
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">进度</span>
+                <span class="stat-value" id="progress">0/20</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">得分</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">准确率</span>
+                <span class="stat-value" id="accuracy">0%</span>
+            </div>
+        </div>
+
+        <div class="question-area" id="question-area">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>正在加载题目...</p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/practice.js') }}"></script>
+{% endblock %}
+

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}openEar - 交互式听力训练{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-left">
+                <a href="{{ url_for('index') }}" class="nav-logo">
+                    <span class="logo-icon">🎵</span>
+                    <span class="logo-text">openEar</span>
+                </a>
+            </div>
+            <div class="nav-center">
+                <a href="{{ url_for('index') }}" class="nav-link">练习</a>
+                <a href="#" class="nav-link">如何练习</a>
+                <a href="#" class="nav-link">统计</a>
+            </div>
+            <div class="nav-right">
+                {% if current_user.is_authenticated %}
+                    <span class="nav-user">{{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="nav-link">登出</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link">登录</a>
+                    <a href="{{ url_for('register') }}" class="nav-link nav-btn">注册</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

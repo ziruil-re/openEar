@@ -1,0 +1,103 @@
+/* 练习页面特定样式 - Hugging Face风格 */
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--hf-text-primary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.form-select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--hf-border);
+    border-radius: var(--hf-radius);
+    background: var(--hf-bg);
+    font-size: 13px;
+    color: var(--hf-text-primary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    height: 32px;
+}
+
+.form-select:hover {
+    border-color: var(--hf-primary);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--hf-primary);
+    box-shadow: 0 0 0 3px var(--hf-primary-light);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.explanation-content {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--hf-text-secondary);
+}
+
+.explanation-content p {
+    margin-bottom: 10px;
+}
+
+.explanation-content ul {
+    margin-left: 16px;
+    margin-bottom: 10px;
+}
+
+.explanation-content li {
+    margin-bottom: 6px;
+    line-height: 1.5;
+}
+
+.tips-list {
+    list-style: none;
+    padding: 0;
+}
+
+.tips-list li {
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    background: var(--hf-bg-secondary);
+    border-left: 3px solid var(--hf-primary);
+    border-radius: var(--hf-radius-sm);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.song-category {
+    margin-bottom: 12px;
+}
+
+.song-category strong {
+    color: var(--hf-text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.song-category ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.song-category ul li {
+    margin-left: 0;
+}

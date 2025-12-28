@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}openEar - 交互式听力训练{% endblock %}
+
+{% block content %}
+<div class="home-container">
+    <div class="home-header">
+        <h1>🎵 听力训练练习</h1>
+        <p class="home-subtitle">
+            这些练习将通过培养对听到内容的更直观理解来提高您的音乐能力。
+            <strong>为了获得最佳效果，请每天练习一点：</strong>
+        </p>
+    </div>
+
+    <div class="exercises-grid">
+        {% for type_key, exercise in exercise_types.items() %}
+        <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-card">
+            <div class="exercise-icon">{{ exercise.icon }}</div>
+            <div class="exercise-content">
+                <h3>{{ exercise.name }}</h3>
+                <p class="exercise-desc">{{ exercise.description }}</p>
+            </div>
+            <div class="exercise-arrow">→</div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.home-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 16px;
+}
+
+.home-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.home-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--hf-text-primary);
+    letter-spacing: -0.02em;
+}
+
+.home-subtitle {
+    font-size: 14px;
+    color: var(--hf-text-secondary);
+    max-width: 700px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+.home-subtitle strong {
+    color: var(--hf-primary);
+    font-weight: 600;
+}
+
+.exercises-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.exercise-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: var(--hf-bg);
+    border: 1px solid var(--hf-border);
+    border-radius: var(--hf-radius);
+    text-decoration: none;
+    color: var(--hf-text-primary);
+    transition: all 0.15s ease;
+    box-shadow: var(--hf-shadow-sm);
+}
+
+.exercise-card:hover {
+    border-color: var(--hf-primary);
+    box-shadow: var(--hf-shadow-md);
+    transform: none;
+}
+
+.exercise-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.exercise-content {
+    flex: 1;
+}
+
+.exercise-content h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+}
+
+.exercise-desc {
+    font-size: 12px;
+    color: var(--hf-text-secondary);
+    line-height: 1.4;
+}
+
+.exercise-arrow {
+    font-size: 16px;
+    color: var(--hf-text-tertiary);
+    flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+    .home-header h1 {
+        font-size: 20px;
+    }
+    
+    .exercises-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
