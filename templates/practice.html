@@ -165,7 +165,11 @@
     <main class="main-practice-area">
         <div class="practice-header">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                <span style="font-size: 24px;">{{ exercise_info.icon }}</span>
+                {% if exercise_info.icon.startswith('minecraft/') %}
+                    <img src="{{ url_for('static', filename='images/' + exercise_info.icon) }}" alt="{{ exercise_info.name }}" style="width: 32px; height: 32px; image-rendering: pixelated;">
+                {% else %}
+                    <span style="font-size: 24px;">{{ exercise_info.icon }}</span>
+                {% endif %}
                 <h1>{{ exercise_info.name }}</h1>
                 <span class="geek-badge" style="font-size: 11px; padding: 4px 8px; background: var(--hf-primary-light); color: var(--hf-primary); border-radius: 12px; font-weight: 500;">
                     {{ exercise_info.name_en }}

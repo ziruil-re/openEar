@@ -27,31 +27,31 @@ EXERCISE_TYPES = {
     'interval': {
         'name': '音程辨认',
         'name_en': 'Intervals',
-        'icon': '🎵',
+        'icon': 'minecraft/我的世界锤子_爱给网_aigei_com.png',  # 锤子 - 敲击音程
         'description': '识别两个音符之间的音程关系'
     },
     'scale_degree': {
         'name': '音阶内音辨认',
         'name_en': 'Scale Degrees',
-        'icon': '🎹',
+        'icon': 'minecraft/我的世界-工作台_爱给网_aigei_com.png',  # 工作台 - 构建音阶
         'description': '识别音阶中的特定音级'
     },
     'chord_quality': {
         'name': '和弦性质',
         'name_en': 'Chord Quality',
-        'icon': '🎼',
+        'icon': 'minecraft/我的世界钻石_爱给网_aigei_com.png',  # 钻石 - 珍贵的和弦
         'description': '识别和弦的类型和性质'
     },
     'chord_progression': {
         'name': '和弦进行',
         'name_en': 'Chord Progressions',
-        'icon': '🎸',
+        'icon': 'minecraft/我的世界tnt_爱给网_aigei_com.png',  # TNT - 爆炸性的和弦进行
         'description': '识别和弦进行的模式'
     },
     'melody': {
         'name': '旋律片段',
         'name_en': 'Melody',
-        'icon': '🎶',
+        'icon': 'minecraft/金锭_爱给网_aigei_com.png',  # 金锭 - 珍贵的旋律
         'description': '识别音阶中的旋律片段'
     }
 }
