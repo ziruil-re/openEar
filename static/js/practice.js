@@ -99,13 +99,15 @@ function displayQuestion(data) {
     
     questionArea.innerHTML = `
         <div class="audio-player-container">
-            <h3>请听音程，选择正确的音程名称：</h3>
+            <h3>🎧 请听音程，选择正确的音程名称：</h3>
             <audio id="audioPlayer" controls preload="auto">
                 <source src="/static/audio/${data.audio_file}" type="audio/wav">
                 您的浏览器不支持音频播放。
             </audio>
             <br>
-            <button class="btn" onclick="playAudio()">播放音频</button>
+            <button class="btn" onclick="playAudio()">
+                <span>▶️</span> 播放音频
+            </button>
         </div>
         
         <div class="options-grid" id="options-grid">

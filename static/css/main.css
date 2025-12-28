@@ -7,10 +7,12 @@
 }
 
 :root {
-    /* Hugging Face 颜色系统 */
-    --hf-primary: #7c3aed;
-    --hf-primary-hover: #6d28d9;
-    --hf-primary-light: #ede9fe;
+    /* Geek风格配色 - 蓝色系 */
+    --hf-primary: #3b82f6;
+    --hf-primary-hover: #2563eb;
+    --hf-primary-light: #dbeafe;
+    --hf-accent: #3b82f6;
+    --hf-accent-light: #dbeafe;
     --hf-secondary: #6366f1;
     --hf-success: #10b981;
     --hf-danger: #ef4444;
@@ -50,7 +52,7 @@
 }
 
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
     background: var(--hf-bg-secondary);
     color: var(--hf-text-primary);
     line-height: 1.5;
@@ -95,6 +97,7 @@ body {
     font-size: 16px;
     font-weight: 600;
     letter-spacing: -0.01em;
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
 }
 
 .logo-icon {

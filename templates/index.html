@@ -2,126 +2,453 @@
 
 {% block title %}openEar - 交互式听力训练{% endblock %}
 
-{% block content %}
-<div class="home-container">
-    <div class="home-header">
-        <h1>🎵 听力训练练习</h1>
-        <p class="home-subtitle">
-            这些练习将通过培养对听到内容的更直观理解来提高您的音乐能力。
-            <strong>为了获得最佳效果，请每天练习一点：</strong>
-        </p>
-    </div>
-
-    <div class="exercises-grid">
-        {% for type_key, exercise in exercise_types.items() %}
-        <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-card">
-            <div class="exercise-icon">{{ exercise.icon }}</div>
-            <div class="exercise-content">
-                <h3>{{ exercise.name }}</h3>
-                <p class="exercise-desc">{{ exercise.description }}</p>
-            </div>
-            <div class="exercise-arrow">→</div>
-        </a>
-        {% endfor %}
-    </div>
-</div>
-
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-.home-container {
-    max-width: 1200px;
+.readme-container {
+    max-width: 1012px;
     margin: 0 auto;
-    padding: 32px 16px;
+    padding: 32px 24px;
 }
 
-.home-header {
-    text-align: center;
+.readme-header {
+    border-bottom: 1px solid var(--hf-border);
+    padding-bottom: 24px;
     margin-bottom: 32px;
 }
 
-.home-header h1 {
-    font-size: 24px;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: var(--hf-text-primary);
-    letter-spacing: -0.02em;
-}
-
-.home-subtitle {
-    font-size: 14px;
-    color: var(--hf-text-secondary);
-    max-width: 700px;
-    margin: 0 auto;
-    line-height: 1.5;
-}
-
-.home-subtitle strong {
-    color: var(--hf-primary);
-    font-weight: 600;
-}
-
-.exercises-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 12px;
-}
-
-.exercise-card {
+.readme-title {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 16px;
-    background: var(--hf-bg);
-    border: 1px solid var(--hf-border);
-    border-radius: var(--hf-radius);
-    text-decoration: none;
-    color: var(--hf-text-primary);
-    transition: all 0.15s ease;
-    box-shadow: var(--hf-shadow-sm);
+    margin-bottom: 16px;
 }
 
-.exercise-card:hover {
-    border-color: var(--hf-primary);
-    box-shadow: var(--hf-shadow-md);
+.readme-title h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--hf-text-primary);
+    letter-spacing: -0.03em;
+    margin: 0;
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+}
+
+.readme-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--hf-bg-secondary);
+    border: 1px solid var(--hf-border);
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--hf-text-secondary);
+    text-decoration: none;
+    transition: all 0.15s ease;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.badge:hover {
+    background: var(--hf-bg-tertiary);
+    border-color: var(--hf-accent);
+    color: var(--hf-accent);
+}
+
+.badge-icon {
+    width: 14px;
+    height: 14px;
+}
+
+.readme-description {
+    font-size: 16px;
+    color: var(--hf-text-secondary);
+    line-height: 1.6;
+    margin: 16px 0;
+    font-family: 'Nunito', sans-serif;
+}
+
+/* 内容区块样式 - 浮窗效果 */
+.content-section {
+    background: var(--hf-bg);
+    border: 1px solid var(--hf-border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.content-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--hf-accent), #60a5fa, var(--hf-accent));
+    opacity: 0.7;
+}
+
+.content-section:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+    transform: translateY(-2px);
+}
+
+.section-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--hf-text-primary);
+    margin-bottom: 20px;
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-title-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.section-title-icon svg {
+    width: 100%;
+    height: 100%;
     transform: none;
 }
 
-.exercise-icon {
+/* Exercise.ME 部分 */
+.exercises-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.exercise-item {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: var(--hf-bg);
+    border: 1px solid var(--hf-border);
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--hf-text-primary);
+    transition: all 0.2s ease;
+    gap: 12px;
+}
+
+.exercise-item:hover {
+    border-color: var(--hf-accent);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+
+.exercise-item-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.exercise-item-icon {
     font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    filter: grayscale(100%);
+    opacity: 0.6;
 }
 
-.exercise-content {
+.exercise-item-content {
     flex: 1;
+    min-width: 0;
 }
 
-.exercise-content h3 {
-    font-size: 14px;
+.exercise-item-name {
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 15px;
     font-weight: 600;
+    color: var(--hf-text-primary);
     margin-bottom: 4px;
-    letter-spacing: -0.01em;
+    display: block;
 }
 
-.exercise-desc {
-    font-size: 12px;
+.exercise-item-task {
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
     color: var(--hf-text-secondary);
-    line-height: 1.4;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-.exercise-arrow {
-    font-size: 16px;
+.exercise-item-task-icon {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.exercise-item-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
     color: var(--hf-text-tertiary);
-    flex-shrink: 0;
+    font-family: 'Nunito', sans-serif;
+    padding-top: 12px;
+    border-top: 1px solid var(--hf-border);
+    flex-wrap: wrap;
+}
+
+.exercise-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.exercise-stat-icon {
+    font-size: 14px;
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
+/* READ.ME 部分 */
+.readme-content {
+    font-size: 15px;
+    color: var(--hf-text-secondary);
+    line-height: 1.8;
+    font-family: 'Nunito', sans-serif;
+}
+
+.readme-content p {
+    margin-bottom: 16px;
+}
+
+.readme-content strong {
+    color: var(--hf-text-primary);
+    font-weight: 600;
+}
+
+/* Contact.ME 部分 */
+.contact-content {
+    font-size: 15px;
+    color: var(--hf-text-secondary);
+    line-height: 1.8;
+    font-family: 'Nunito', sans-serif;
+}
+
+.contact-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: var(--hf-bg-secondary);
+    border: 1px solid var(--hf-border);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--hf-text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    font-family: 'IBM Plex Mono', monospace;
+}
+
+.contact-link:hover {
+    background: var(--hf-accent-light);
+    border-color: var(--hf-accent);
+    color: var(--hf-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+}
+
+.geek-term {
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    background: var(--hf-bg-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    color: var(--hf-accent);
+    font-weight: 500;
 }
 
 @media (max-width: 768px) {
-    .home-header h1 {
-        font-size: 20px;
+    .readme-container {
+        padding: 24px 16px;
     }
     
-    .exercises-grid {
-        grid-template-columns: 1fr;
+    .readme-title h1 {
+        font-size: 24px;
+    }
+    
+    .content-section {
+        padding: 20px;
+    }
+    
+    .exercise-item-stats {
+        gap: 12px;
     }
 }
 </style>
 {% endblock %}
 
+{% block content %}
+<div class="readme-container">
+    <!-- README Header -->
+    <div class="readme-header">
+        <div class="readme-title">
+            <span style="font-size: 32px;">🎵</span>
+            <h1>openEar</h1>
+        </div>
+        
+        <div class="readme-badges">
+            <span class="badge">
+                <svg class="badge-icon" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                Open Source
+            </span>
+            <span class="badge">
+                <span class="badge-icon">🎹</span>
+                Ear Training
+            </span>
+            <span class="badge">
+                <span class="badge-icon">⚡</span>
+                Interactive
+            </span>
+            <span class="badge">
+                <span class="badge-icon">🧠</span>
+                AI-Powered
+            </span>
+        </div>
+        
+        <p class="readme-description">
+            <strong>openEar</strong> 是一个基于 <span class="geek-term">Jamey Aebersold</span> 爵士听力训练方法论的交互式学习平台。
+            通过 <span class="geek-term">Flask</span> + <span class="geek-term">Whisper</span> 技术栈，提供五种核心练习模式，帮助音乐学习者提升听力能力。
+        </p>
+    </div>
+
+    <!-- Exercise.ME -->
+    <div class="content-section">
+        <h2 class="section-title">
+            <span class="section-title-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6C3 4.89543 3.89543 4 5 4H9.58579C9.851 4 10.1054 4.10536 10.2929 4.29289L12.7071 6.70711C12.8946 6.89464 13.149 7 13.4142 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5"/>
+                </svg>
+            </span>
+            <span>&lt;Exercise.ME&gt;</span>
+        </h2>
+        <ul class="exercises-list">
+            {% for type_key, exercise in exercise_types.items() %}
+            <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-item">
+                <div class="exercise-item-header">
+                    <span class="exercise-item-icon">{{ exercise.icon }}</span>
+                    <div class="exercise-item-content">
+                        <span class="exercise-item-name">openEar/{{ exercise.name }}</span>
+                        <span class="exercise-item-task">
+                            <span class="exercise-item-task-icon">🎯</span>
+                            <span>{{ exercise.description }}</span>
+                        </span>
+                    </div>
+                </div>
+                <div class="exercise-item-stats">
+                    <div class="exercise-stat">
+                        <span class="exercise-stat-icon">🕐</span>
+                        <span>0 min</span>
+                    </div>
+                    <div class="exercise-stat">
+                        <span class="exercise-stat-icon">🏆</span>
+                        <span>0%</span>
+                    </div>
+                    <div class="exercise-stat">
+                        <span class="exercise-stat-icon">📊</span>
+                        <span>0 次</span>
+                    </div>
+                    <div class="exercise-stat">
+                        <span class="exercise-stat-icon">⭐</span>
+                        <span>初级</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- READ.ME -->
+    <div class="content-section">
+        <h2 class="section-title">
+            <span class="section-title-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6C3 4.89543 3.89543 4 5 4H9.58579C9.851 4 10.1054 4.10536 10.2929 4.29289L12.7071 6.70711C12.8946 6.89464 13.149 7 13.4142 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5"/>
+                </svg>
+            </span>
+            <span>&lt;READ.ME&gt;</span>
+        </h2>
+        <div class="readme-content">
+            <p>
+                <strong>openEar</strong> 是一个开源的交互式听力训练平台，旨在帮助音乐学习者通过系统化的练习提升音感能力。
+                本项目基于著名爵士教育家 <strong>Jamey Aebersold</strong> 的《Jazz Ear Training》方法论，结合现代 Web 技术，
+                提供从基础音程识别到复杂和弦进行的全方位训练。
+            </p>
+            <p>
+                无论你是爵士乐手、古典音乐学习者，还是想要提升音乐素养的爱好者，<strong>openEar</strong> 都能为你提供
+                个性化的练习方案和实时反馈，让听力训练变得高效而有趣。
+            </p>
+        </div>
+    </div>
+
+    <!-- Contact.ME -->
+    <div class="content-section">
+        <h2 class="section-title">
+            <span class="section-title-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 6C3 4.89543 3.89543 4 5 4H9.58579C9.851 4 10.1054 4.10536 10.2929 4.29289L12.7071 6.70711C12.8946 6.89464 13.149 7 13.4142 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5"/>
+                </svg>
+            </span>
+            <span>&lt;Contact.ME&gt;</span>
+        </h2>
+        <div class="contact-content">
+            <p>欢迎反馈、建议和贡献！</p>
+            <div class="contact-links">
+                <a href="https://github.com/yourusername/openEar" target="_blank" class="contact-link">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    GitHub
+                </a>
+                <a href="mailto:contact@opear.com" class="contact-link">
+                    <span>📧</span>
+                    Email
+                </a>
+                <a href="#" class="contact-link">
+                    <span>💬</span>
+                    Issues
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -41,7 +41,7 @@
                             </div>
                         </div>
                         <div class="form-group">
-                            <label>方向：</label>
+                            <label>↕️ 方向：</label>
                             <div class="checkbox-group">
                                 <label class="checkbox-item">
                                     <input type="checkbox" name="directions" value="up" checked>
@@ -55,7 +55,7 @@
                         </div>
                         {% endif %}
                         <div class="form-group">
-                            <label>题目数量：</label>
+                            <label>🔢 题目数量：</label>
                             <select name="total_questions" class="form-select">
                                 <option value="10">10题</option>
                                 <option value="20" selected>20题</option>
@@ -63,7 +63,9 @@
                                 <option value="50">50题</option>
                             </select>
                         </div>
-                        <button type="button" class="btn" onclick="applySettings()">应用设置</button>
+                        <button type="button" class="btn" onclick="applySettings()">
+                            <span>💾</span> 应用设置
+                        </button>
                     </form>
                 </div>
             </div>
@@ -71,7 +73,7 @@
             <!-- Explanation 标签页 -->
             <div class="tab-content" id="explanation-tab">
                 <div class="sidebar-section">
-                    <h3>练习说明</h3>
+                    <h3>📖 练习说明</h3>
                     {% if tips.explanation %}
                     <div class="explanation-content">
                         {{ tips.explanation | safe }}
@@ -82,7 +84,7 @@
                 </div>
                 {% if tips.tips %}
                 <div class="sidebar-section">
-                    <h3>练习技巧</h3>
+                    <h3>💡 练习技巧</h3>
                     <ul class="tips-list">
                         {% for tip in tips.tips %}
                         <li>{{ tip }}</li>
@@ -95,9 +97,9 @@
             <!-- Listen 标签页 -->
             <div class="tab-content" id="listen-tab">
                 <div class="sidebar-section">
-                    <h3>参考歌曲</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-tertiary); margin-bottom: 16px;">
-                        以下歌曲可以帮助您更好地识别音程：
+                    <h3>🎵 参考歌曲</h3>
+                    <p style="font-size: 12px; color: var(--hf-text-tertiary); margin-bottom: 12px;">
+                        💡 <strong>Pro Tip:</strong> 以下歌曲可以帮助您更好地识别音程。建议在 <span class="geek-term">网易云音乐</span> 中搜索并添加到歌单。
                     </p>
                     {% if songs %}
                     <ul class="song-list">
@@ -125,13 +127,19 @@
     <!-- 右侧主练习区域 -->
     <main class="main-practice-area">
         <div class="practice-header">
-            <h1>{{ exercise_info.icon }} {{ exercise_info.name }}</h1>
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <span style="font-size: 24px;">{{ exercise_info.icon }}</span>
+                <h1>{{ exercise_info.name }}</h1>
+                <span class="geek-badge" style="font-size: 11px; padding: 4px 8px; background: var(--hf-primary-light); color: var(--hf-primary); border-radius: 12px; font-weight: 500;">
+                    {{ exercise_info.name_en }}
+                </span>
+            </div>
             <p>{{ exercise_info.description }}</p>
         </div>
 
         {% if not current_user.is_authenticated %}
         <div class="auth-notice">
-            <p>ℹ️ 您当前未登录，练习记录不会被保存。<a href="{{ url_for('login') }}">登录</a>后可保存统计信息。</p>
+            <p>⚠️ 您当前未登录，练习记录不会被保存到数据库。 <a href="{{ url_for('login') }}">登录</a>后可保存统计信息和练习历史。</p>
         </div>
         {% endif %}
         

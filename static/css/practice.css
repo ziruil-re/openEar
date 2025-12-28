@@ -1,4 +1,12 @@
-/* 练习页面特定样式 - Hugging Face风格 */
+/* 练习页面特定样式 - Hugging Face风格 + Y2K字体 */
+
+.practice-header h1 {
+    font-family: 'Varela Round', 'Nunito', sans-serif;
+}
+
+.sidebar-section h3 {
+    font-family: 'Varela Round', 'Nunito', sans-serif;
+}
 
 .form-group {
     margin-bottom: 16px;
