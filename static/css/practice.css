@@ -96,13 +96,72 @@
     transform: translateY(0px);
 }
 
+/* 侧边栏头部 */
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #d0d0d0;
+    padding-bottom: 8px;
+}
+
+/* 侧边栏收起按钮 */
+.sidebar-toggle {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: #e0e0e0;
+    border: 2px solid #000000;
+    border-top-color: #ffffff;
+    border-left-color: #ffffff;
+    border-bottom-color: #808080;
+    border-right-color: #808080;
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 
+        inset 1px 1px 0px rgba(255, 255, 255, 0.6),
+        inset -1px -1px 0px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-toggle:hover {
+    background: #f0f0f0;
+    border-top-color: #ffffff;
+    border-left-color: #ffffff;
+}
+
+.sidebar-toggle:active {
+    background: #d0d0d0;
+    border-top-color: #808080;
+    border-left-color: #808080;
+    border-bottom-color: #ffffff;
+    border-right-color: #ffffff;
+}
+
+.toggle-icon {
+    transition: transform 0.2s ease;
+}
+
+.sidebar.collapsed .toggle-icon {
+    transform: rotate(180deg);
+}
+
 /* 侧边栏标签页 - 简化版 */
 .sidebar-tabs {
     display: flex;
     gap: 4px;
-    margin-bottom: 16px;
-    border-bottom: 2px solid #d0d0d0;
-    padding-bottom: 4px;
+    flex: 1;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
 }
 
 .sidebar-tab {
@@ -143,6 +202,29 @@
     box-shadow: 
         inset 1px 1px 0px rgba(255, 255, 255, 0.6),
         inset -1px -1px 0px rgba(0, 0, 0, 0.2);
+}
+
+/* 侧边栏收起状态 */
+.sidebar {
+    transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+    width: 50px !important;
+}
+
+.sidebar.collapsed .sidebar-tabs {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-content {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-header {
+    justify-content: center;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
 }
 
 /* 表单元素 - 简化版 */
@@ -573,21 +655,123 @@
     text-decoration: underline;
 }
 
-/* 响应式设计 */
+/* 响应式设计 - 移动端极简风格 */
 @media (max-width: 768px) {
-    .checkbox-group {
-        grid-template-columns: 1fr;
+    /* 练习页面布局 */
+    .practice-layout {
+        flex-direction: column;
+        height: auto;
+        gap: 12px;
+    }
+    
+    .sidebar {
+        width: 100%;
+        max-height: none;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .main-practice-area {
+        border-radius: 0;
+        padding: 16px;
+        min-height: auto;
+    }
+    
+    /* 极简化按钮和容器 */
+    .minecraft-button,
+    .btn,
+    .play-audio-btn,
+    .answer-option,
+    .answer-button {
+        border-width: 1px !important;
+        padding: 10px 14px !important;
+        font-size: 13px !important;
+        box-shadow: none !important;
+    }
+    
+    .question-area {
+        padding: 16px !important;
+        border-width: 1px !important;
     }
     
     .stats-bar {
-        flex-direction: column;
+        flex-direction: row;
         gap: 8px;
+        padding: 12px;
+        flex-wrap: wrap;
+    }
+    
+    .stat-item {
+        flex: 1;
+        min-width: calc(50% - 4px);
+        padding: 10px;
+    }
+    
+    .stat-value {
+        font-size: 18px;
+    }
+    
+    .checkbox-group {
+        grid-template-columns: 1fr;
+        gap: 6px;
+    }
+    
+    .checkbox-item {
+        padding: 8px;
+        font-size: 12px;
+        border-width: 1px;
+    }
+    
+    .form-select {
+        border-width: 1px;
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+    
+    .sidebar-tab {
+        padding: 8px 10px;
+        font-size: 12px;
+        border-width: 1px;
+    }
+    
+    .audio-player-container {
+        margin: 12px 0;
+    }
+    
+    .audio-player-container h3 {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+    
+    .reference-audio-container {
+        margin-top: 16px;
+        padding-top: 16px;
+    }
+    
+    .reference-audio-container h4 {
+        font-size: 13px;
+        margin-bottom: 8px;
     }
     
     .answer-option,
     .answer-button {
         display: block;
         width: 100%;
-        margin: 8px 0;
+        margin: 6px 0;
+        min-width: auto;
+    }
+    
+    /* 减少间距 */
+    .practice-header {
+        margin-bottom: 16px;
+    }
+    
+    .practice-header h1 {
+        font-size: 16px;
+    }
+    
+    .sidebar-section {
+        margin-bottom: 16px;
     }
 }

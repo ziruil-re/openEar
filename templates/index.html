@@ -25,6 +25,7 @@
     background-position: center;
     background-repeat: no-repeat;
     z-index: -1;
+    filter: brightness(1.2) contrast(1.1);
 }
 
 .minecraft-menu-background::before {
@@ -34,7 +35,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.1);
     z-index: 0;
 }
 
@@ -176,19 +177,22 @@
 /* Splash Text */
 .minecraft-splash {
     position: absolute;
-    top: -20px;
-    right: -100px;
+    top: -10px;
+    right: 10px;
     font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
     color: #FFD700;
     text-shadow: 
         2px 2px 0px #000000,
         3px 3px 0px #000000,
         0px 0px 8px rgba(0, 0, 0, 0.6);
-    transform: rotate(15deg);
+    transform: rotate(12deg);
     white-space: nowrap;
     z-index: 10;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* 菜单按钮 */
@@ -296,8 +300,65 @@
 }
 
 @media (max-width: 768px) {
-    .minecraft-logo {
-        font-size: 36px;
+    /* 移动端优化 */
+    .minecraft-menu-content {
+        padding: 60px 20px 40px;
+        min-height: 100vh;
+    }
+    
+    .minecraft-main-title {
+        font-size: 60px !important;
+        letter-spacing: 4px !important;
+        transform: perspective(800px) rotateX(15deg) rotateY(-5deg) scaleY(1.1) !important;
+        margin-bottom: 20px;
+    }
+    
+    .minecraft-subtitle {
+        font-size: 18px !important;
+        letter-spacing: 2px !important;
+        transform: perspective(400px) rotateX(10deg) rotateY(-3deg) !important;
+    }
+    
+    .minecraft-splash {
+        font-size: 14px !important;
+        top: -5px;
+        right: 5px;
+        transform: rotate(10deg) !important;
+        max-width: 80px;
+    }
+    
+    .minecraft-menu-buttons {
+        max-width: 100%;
+        gap: 6px;
+    }
+    
+    .minecraft-button {
+        padding: 12px 16px;
+        font-size: 14px;
+        gap: 10px;
+    }
+    
+    .button-icon {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .disc-decoration {
+        display: none; /* 移动端隐藏唱片装饰 */
+    }
+    
+    .minecraft-footer {
+        position: relative;
+        bottom: auto;
+        flex-direction: column;
+        gap: 8px;
+        padding: 20px;
+        font-size: 12px;
+        text-align: center;
+    }
+    
+    .minecraft-title-area {
+        margin-bottom: 40px;
     }
 }
 

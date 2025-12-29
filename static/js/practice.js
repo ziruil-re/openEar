@@ -1,5 +1,17 @@
 // 练习页面JavaScript
 
+// 侧边栏收起/展开功能
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarToggle = document.getElementById('sidebar-toggle');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (sidebarToggle && sidebar) {
+        sidebarToggle.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+        });
+    }
+});
+
 // 标签页切换
 document.querySelectorAll('.sidebar-tab').forEach(tab => {
     tab.addEventListener('click', () => {

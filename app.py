@@ -651,5 +651,7 @@ def logout():
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    # 开发环境：允许局域网访问
+    # 访问地址：http://你的IP地址:5001
+    app.run(host='0.0.0.0', port=5001, debug=True)
 

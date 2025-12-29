@@ -581,8 +581,30 @@ body {
 }
 
 @media (max-width: 768px) {
+    /* 移动端导航栏 - 显示链接但更紧凑 */
     .nav-center {
-        display: none;
+        display: flex;
+        gap: 12px;
+        margin-left: 12px;
+    }
+    
+    .nav-center .nav-link {
+        font-size: 13px;
+        padding: 4px 8px;
+    }
+    
+    .nav-right {
+        gap: 8px;
+    }
+    
+    .nav-right .nav-link {
+        font-size: 13px;
+        padding: 4px 8px;
+    }
+    
+    .nav-btn {
+        padding: 4px 10px;
+        font-size: 13px;
     }
     
     .main-content {

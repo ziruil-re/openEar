@@ -9,11 +9,16 @@
 {% block content %}
 <div class="practice-layout">
     <!-- 左侧边栏 -->
-    <aside class="sidebar">
-        <div class="sidebar-tabs">
-            <button class="sidebar-tab active" data-tab="settings">设置</button>
-            <button class="sidebar-tab" data-tab="explanation">说明</button>
-            <button class="sidebar-tab" data-tab="listen">歌单</button>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <button class="sidebar-toggle" id="sidebar-toggle" title="收起/展开侧边栏">
+                <span class="toggle-icon">◀</span>
+            </button>
+            <div class="sidebar-tabs">
+                <button class="sidebar-tab active" data-tab="settings">设置</button>
+                <button class="sidebar-tab" data-tab="explanation">说明</button>
+                <button class="sidebar-tab" data-tab="listen">歌单</button>
+            </div>
         </div>
 
         <div class="sidebar-content">
