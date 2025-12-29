@@ -137,13 +137,13 @@ function displayQuestion(data) {
                     您的浏览器不支持音频播放。
                 </audio>
                 <br>
-                <button class="btn" onclick="playAudio()">
+                <button class="play-audio-btn" onclick="playAudio()">
                     <span>▶️</span> 播放音频
                 </button>
             </div>
-            <div class="options-grid" id="options-grid">
+            <div class="options-grid" id="options-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px;">
                 ${data.options.map((option, index) => `
-                    <button class="option-btn" onclick="selectAnswer('${data.option_values[index]}')">
+                    <button class="answer-button" onclick="selectAnswer('${data.option_values[index]}')">
                         ${option}
                     </button>
                 `).join('')}
@@ -152,39 +152,39 @@ function displayQuestion(data) {
     } else if (exerciseType === 'scale_degree') {
         questionHtml = `
             <div class="audio-player-container">
-                <h3>🎧 请听音符，选择它在音阶中的音级：</h3>
-                <p style="font-size: 13px; color: var(--hf-text-secondary); margin-bottom: 12px;">
-                    当前音阶：<strong>${data.scale_name || ''}</strong>
+                <h3 style="font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600; color: #000000; margin-bottom: 12px;">🎧 请听音符，选择它在音阶中的音级：</h3>
+                <p style="font-size: 13px; color: #606060; margin-bottom: 12px; font-family: 'JetBrains Mono', 'Space Mono', monospace;">
+                    当前音阶：<strong style="color: #000000;">${data.scale_name || ''}</strong>
                 </p>
                 <audio id="audioPlayer" controls preload="auto">
                     <source src="/static/audio/${data.audio_file}" type="audio/wav">
                     您的浏览器不支持音频播放。
                 </audio>
                 <br>
-                <button class="btn" onclick="playAudio()">
+                <button class="play-audio-btn" onclick="playAudio()">
                     <span>▶️</span> 播放题目音频
                 </button>
             </div>
-            <div class="reference-audio-container" style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--hf-border);">
-                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: var(--hf-text-primary);">参考音频：</h4>
+            <div class="reference-audio-container">
+                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #000000; font-family: 'JetBrains Mono', 'Space Mono', monospace;">参考音频：</h4>
                 <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                     <div style="flex: 1; min-width: 200px;">
-                        <label style="font-size: 12px; color: var(--hf-text-secondary); margin-bottom: 6px; display: block;">根音：</label>
+                        <label style="font-size: 12px; color: #606060; margin-bottom: 6px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">根音：</label>
                         <audio controls preload="auto" style="width: 100%;">
                             <source src="/static/audio/${data.root_audio_file}" type="audio/wav">
                         </audio>
                     </div>
                     <div style="flex: 1; min-width: 200px;">
-                        <label style="font-size: 12px; color: var(--hf-text-secondary); margin-bottom: 6px; display: block;">完整音阶：</label>
+                        <label style="font-size: 12px; color: #606060; margin-bottom: 6px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">完整音阶：</label>
                         <audio controls preload="auto" style="width: 100%;">
                             <source src="/static/audio/${data.scale_audio_file}" type="audio/wav">
                         </audio>
                     </div>
                 </div>
             </div>
-            <div class="options-grid" id="options-grid" style="margin-top: 24px;">
+            <div class="options-grid" id="options-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;">
                 ${data.options.map((option) => `
-                    <button class="option-btn" onclick="selectAnswer('${option}')">
+                    <button class="answer-button" onclick="selectAnswer('${option}')">
                         ${option}
                     </button>
                 `).join('')}
@@ -199,8 +199,10 @@ function displayQuestion(data) {
 function selectAnswer(answer) {
     if (!window.currentQuestion) return;
     
+    window.selectedAnswer = answer;
+    
     // 禁用所有选项
-    document.querySelectorAll('.option-btn').forEach(btn => {
+    document.querySelectorAll('.answer-button, .option-btn').forEach(btn => {
         btn.disabled = true;
     });
     
@@ -246,13 +248,48 @@ function showResult(data) {
     const resultDiv = document.getElementById('result-message');
     resultDiv.style.display = 'block';
     resultDiv.className = `result-message ${data.is_correct ? 'correct' : 'incorrect'}`;
+    resultDiv.style.padding = '16px';
+    resultDiv.style.marginTop = '16px';
+    resultDiv.style.fontFamily = "'JetBrains Mono', 'Space Mono', monospace";
+    resultDiv.style.fontWeight = '600';
+    resultDiv.style.textAlign = 'center';
+    resultDiv.style.border = '3px solid #000000';
+    resultDiv.style.boxShadow = 'inset 2px 2px 0px rgba(255, 255, 255, 0.5), inset -2px -2px 0px rgba(0, 0, 0, 0.3)';
+    
+    if (data.is_correct) {
+        resultDiv.style.background = '#10b981';
+        resultDiv.style.color = '#ffffff';
+        resultDiv.style.borderTopColor = '#34d399';
+        resultDiv.style.borderLeftColor = '#34d399';
+        resultDiv.style.borderBottomColor = '#059669';
+        resultDiv.style.borderRightColor = '#059669';
+    } else {
+        resultDiv.style.background = '#ef4444';
+        resultDiv.style.color = '#ffffff';
+        resultDiv.style.borderTopColor = '#f87171';
+        resultDiv.style.borderLeftColor = '#f87171';
+        resultDiv.style.borderBottomColor = '#dc2626';
+        resultDiv.style.borderRightColor = '#dc2626';
+    }
+    
     resultDiv.innerHTML = data.is_correct 
         ? `✅ 正确！`
         : `❌ 错误！正确答案：${data.correct_answer}`;
     
-    // 禁用所有选项
-    document.querySelectorAll('.option-btn').forEach(btn => {
+    // 标记正确答案和错误答案
+    const selectedAnswer = window.selectedAnswer || '';
+    document.querySelectorAll('.answer-button, .option-btn').forEach(btn => {
         btn.disabled = true;
+        const btnText = btn.textContent.trim();
+        if (data.is_correct && btnText === data.correct_answer) {
+            btn.classList.add('correct');
+        } else if (!data.is_correct) {
+            if (btnText === data.correct_answer) {
+                btn.classList.add('correct');
+            } else if (btnText === selectedAnswer) {
+                btn.classList.add('incorrect');
+            }
+        }
     });
     
     // 2秒后加载下一题

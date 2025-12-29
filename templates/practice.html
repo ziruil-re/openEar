@@ -165,8 +165,9 @@
     <main class="main-practice-area">
         <div class="practice-header">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                {% if exercise_info.icon.startswith('minecraft/') %}
-                    <img src="{{ url_for('static', filename='images/' + exercise_info.icon) }}" alt="{{ exercise_info.name }}" style="width: 32px; height: 32px; image-rendering: pixelated;">
+                {% if exercise_info.icon.startswith('minecrafts/') or exercise_info.icon.startswith('minecraft/') %}
+                    <img src="{{ url_for('static', filename='images/' + exercise_info.icon) }}" alt="{{ exercise_info.name }}" style="width: 32px; height: 32px; image-rendering: pixelated;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                    <span style="display:none; font-size: 24px;">🎵</span>
                 {% else %}
                     <span style="font-size: 24px;">{{ exercise_info.icon }}</span>
                 {% endif %}

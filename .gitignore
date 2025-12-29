@@ -53,6 +53,9 @@ hearzy.db
 data/
 transcriptions/
 
+# Minecraft images (用户指定忽略)
+static/images/minecrafts/
+
 # Audio files (可选，如果不想提交音频文件)
 # static/audio/
 

@@ -1,10 +1,56 @@
 {% extends "base.html" %}
 
-{% block title %}openEar - 交互式听力训练{% endblock %}
+{% block title %}Earcraft - 交互式听力训练{% endblock %}
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+/* Minecraft 主菜单样式 */
+.minecraft-menu {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Minecraft 背景 */
+.minecraft-menu-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("{{ url_for('static', filename='images/minecrafts/background/image copy 2.png') }}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: -1;
+}
+
+.minecraft-menu-background::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2);
+    z-index: 0;
+}
+
+/* 主内容容器 */
+.minecraft-menu-content {
+    position: relative;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 40px 40px;
+    z-index: 1;
+}
+
 .readme-container {
     max-width: 1012px;
     margin: 0 auto;
@@ -20,8 +66,10 @@
 .readme-title {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 12px;
     margin-bottom: 16px;
+    width: 100%;
 }
 
 .readme-title h1 {
@@ -31,6 +79,226 @@
     letter-spacing: -0.03em;
     margin: 0;
     font-family: 'JetBrains Mono', 'Space Mono', monospace;
+}
+
+/* Minecraft 背景 - 左右唱片装饰 */
+.minecraft-background {
+    position: relative;
+    background: transparent;
+    padding: 100px 180px;
+    border-radius: 16px;
+    overflow: visible;
+    margin-bottom: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+}
+
+/* 左右唱片装饰容器 - 一排 */
+.disc-decoration {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.disc-decoration.left {
+    left: 20px;
+}
+
+.disc-decoration.right {
+    right: 20px;
+}
+
+.disc-decoration img {
+    width: 60px;
+    height: 60px;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* 标题区域 */
+.minecraft-title-area {
+    text-align: center;
+    margin-bottom: 60px;
+    position: relative;
+}
+
+.minecraft-main-title {
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 140px;
+    font-weight: 900;
+    color: #c0c0c0;
+    text-shadow: 
+        6px 6px 0px #000000,
+        7px 7px 0px #000000,
+        8px 8px 0px #000000,
+        9px 9px 0px #000000,
+        10px 10px 0px #000000,
+        4px 4px 0px #808080,
+        0px 0px 30px rgba(0, 0, 0, 0.7);
+    letter-spacing: 14px;
+    text-transform: uppercase;
+    position: relative;
+    display: inline-block;
+    transform: perspective(1000px) rotateX(20deg) rotateY(-8deg) scaleY(1.25);
+    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 20%, #c0c0c0 40%, #a0a0a0 60%, #808080 80%, #606060 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.7));
+    line-height: 1.1;
+    margin: 0 0 10px 0;
+    transform-style: preserve-3d;
+}
+
+.minecraft-subtitle {
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: #808080;
+    text-shadow: 
+        2px 2px 0px #000000,
+        3px 3px 0px #000000,
+        0px 0px 10px rgba(0, 0, 0, 0.5);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin: 0;
+    transform: perspective(600px) rotateX(15deg) rotateY(-5deg);
+}
+
+/* Splash Text */
+.minecraft-splash {
+    position: absolute;
+    top: -20px;
+    right: -100px;
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 24px;
+    font-weight: 700;
+    color: #FFD700;
+    text-shadow: 
+        2px 2px 0px #000000,
+        3px 3px 0px #000000,
+        0px 0px 8px rgba(0, 0, 0, 0.6);
+    transform: rotate(15deg);
+    white-space: nowrap;
+    z-index: 10;
+}
+
+/* 菜单按钮 */
+.minecraft-menu-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.minecraft-button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #c0c0c0;
+    border: 3px solid #000000;
+    border-top-color: #ffffff;
+    border-left-color: #ffffff;
+    border-bottom-color: #404040;
+    border-right-color: #404040;
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 600;
+    color: #000000;
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.1s ease;
+    image-rendering: pixelated;
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.3);
+}
+
+.minecraft-button:hover {
+    background: #d0d0d0;
+    border-top-color: #f0f0f0;
+    border-left-color: #f0f0f0;
+    border-bottom-color: #303030;
+    border-right-color: #303030;
+    transform: translateY(-1px);
+    box-shadow: 
+        inset 2px 2px 0px rgba(255, 255, 255, 0.6),
+        inset -2px -2px 0px rgba(0, 0, 0, 0.4),
+        0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.minecraft-button:active {
+    background: #b0b0b0;
+    border-top-color: #404040;
+    border-left-color: #404040;
+    border-bottom-color: #ffffff;
+    border-right-color: #ffffff;
+    transform: translateY(0px);
+    box-shadow: 
+        inset -2px -2px 0px rgba(255, 255, 255, 0.3),
+        inset 2px 2px 0px rgba(0, 0, 0, 0.5);
+}
+
+.button-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.button-icon img {
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.button-text {
+    flex: 1;
+}
+
+/* 底部信息 */
+.minecraft-footer {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    font-family: 'JetBrains Mono', 'Space Mono', monospace;
+    font-size: 14px;
+    color: #ffffff;
+    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+}
+
+.minecraft-version {
+    font-weight: 600;
+}
+
+.minecraft-copyright {
+    font-weight: 400;
+}
+
+@media (max-width: 768px) {
+    .minecraft-logo {
+        font-size: 36px;
+    }
 }
 
 .readme-badges {
@@ -302,12 +570,46 @@
 }
 
 @media (max-width: 768px) {
-    .readme-container {
-        padding: 24px 16px;
+    .minecraft-main-title {
+        font-size: 80px;
+        letter-spacing: 8px;
+        transform: perspective(800px) rotateX(18deg) rotateY(-6deg) scaleY(1.2);
     }
     
-    .readme-title h1 {
-        font-size: 24px;
+    .minecraft-subtitle {
+        font-size: 20px;
+        letter-spacing: 2px;
+    }
+    
+    .minecraft-splash {
+        font-size: 18px;
+        top: -10px;
+        right: -50px;
+        transform: rotate(12deg);
+    }
+    
+    .minecraft-menu-content {
+        padding: 60px 20px 40px;
+    }
+    
+    .minecraft-menu-buttons {
+        max-width: 100%;
+    }
+    
+    .minecraft-button {
+        font-size: 16px;
+        padding: 12px 16px;
+    }
+    
+    .minecraft-footer {
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+        font-size: 12px;
+    }
+    
+    .readme-container {
+        padding: 24px 16px;
     }
     
     .content-section {
@@ -322,144 +624,38 @@
 {% endblock %}
 
 {% block content %}
-<div class="readme-container">
-    <!-- README Header -->
-    <div class="readme-header">
-        <div class="readme-title">
-            <span style="font-size: 32px;">🎵</span>
-            <h1>openEar</h1>
+<div class="minecraft-menu">
+    <!-- Minecraft 风格背景 -->
+    <div class="minecraft-menu-background"></div>
+    
+    <!-- 主内容 -->
+    <div class="minecraft-menu-content">
+        <!-- 标题区域 -->
+        <div class="minecraft-title-area">
+            <h1 class="minecraft-main-title">Earcraft</h1>
+            <h2 class="minecraft-subtitle">EAR TRAINING EDITION</h2>
+            <!-- Splash Text -->
+            <div class="minecraft-splash">practice!</div>
         </div>
         
-        <div class="readme-badges">
-            <span class="badge">
-                <svg class="badge-icon" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-                </svg>
-                Open Source
-            </span>
-            <span class="badge">
-                <span class="badge-icon">🎹</span>
-                Ear Training
-            </span>
-            <span class="badge">
-                <span class="badge-icon">⚡</span>
-                Interactive
-            </span>
-            <span class="badge">
-                <span class="badge-icon">🧠</span>
-                AI-Powered
-            </span>
-        </div>
-        
-        <p class="readme-description">
-            <strong>openEar</strong> 是一个基于 <span class="geek-term">Jamey Aebersold</span> 爵士听力训练方法论的交互式学习平台。
-            通过 <span class="geek-term">Flask</span> + <span class="geek-term">Whisper</span> 技术栈，提供五种核心练习模式，帮助音乐学习者提升听力能力。
-        </p>
-    </div>
-
-    <!-- Exercise.ME -->
-    <div class="content-section">
-        <h2 class="section-title">
-            <span class="section-title-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 6C3 4.89543 3.89543 4 5 4H9.58579C9.851 4 10.1054 4.10536 10.2929 4.29289L12.7071 6.70711C12.8946 6.89464 13.149 7 13.4142 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5"/>
-                </svg>
-            </span>
-            <span>&lt;Exercise.ME&gt;</span>
-        </h2>
-        <ul class="exercises-list">
+        <!-- 菜单按钮区域 -->
+        <div class="minecraft-menu-buttons">
             {% for type_key, exercise in exercise_types.items() %}
-            <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-item">
-                <div class="exercise-item-header">
-                    <span class="exercise-item-icon">
-                        {% if exercise.icon.startswith('minecraft/') %}
-                            <img src="{{ url_for('static', filename='images/' + exercise.icon) }}" alt="{{ exercise.name }}">
-                        {% else %}
-                            {{ exercise.icon }}
-                        {% endif %}
-                    </span>
-                    <div class="exercise-item-content">
-                        <span class="exercise-item-name">openEar/{{ exercise.name }}</span>
-                        <span class="exercise-item-task">
-                            <span class="exercise-item-task-icon">🎯</span>
-                            <span>{{ exercise.description }}</span>
-                        </span>
-                    </div>
-                </div>
-                <div class="exercise-item-stats">
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">🕐</span>
-                        <span>0 min</span>
-                    </div>
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">🏆</span>
-                        <span>0%</span>
-                    </div>
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">📊</span>
-                        <span>0 次</span>
-                    </div>
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">⭐</span>
-                        <span>初级</span>
-                    </div>
-                </div>
+            <a href="{{ url_for('practice', exercise_type=type_key) }}" class="minecraft-button">
+                <span class="button-icon">
+                    {% if exercise.icon.startswith('minecrafts/') or exercise.icon.startswith('minecraft/') %}
+                        <img src="{{ url_for('static', filename='images/' + exercise.icon) }}" alt="{{ exercise.name }}" onerror="this.style.display='none';">
+                    {% endif %}
+                </span>
+                <span class="button-text">{{ exercise.category }}：{{ exercise.name }}</span>
             </a>
             {% endfor %}
-        </ul>
-    </div>
-
-    <!-- READ.ME -->
-    <div class="content-section">
-        <h2 class="section-title">
-            <span class="section-title-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 6C3 4.89543 3.89543 4 5 4H9.58579C9.851 4 10.1054 4.10536 10.2929 4.29289L12.7071 6.70711C12.8946 6.89464 13.149 7 13.4142 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5"/>
-                </svg>
-            </span>
-            <span>&lt;READ.ME&gt;</span>
-        </h2>
-        <div class="readme-content">
-            <p>
-                <strong>openEar</strong> 是一个开源的交互式听力训练平台，旨在帮助音乐学习者通过系统化的练习提升音感能力。
-                本项目基于著名爵士教育家 <strong>Jamey Aebersold</strong> 的《Jazz Ear Training》方法论，结合现代 Web 技术，
-                提供从基础音程识别到复杂和弦进行的全方位训练。
-            </p>
-            <p>
-                无论你是爵士乐手、古典音乐学习者，还是想要提升音乐素养的爱好者，<strong>openEar</strong> 都能为你提供
-                个性化的练习方案和实时反馈，让听力训练变得高效而有趣。
-            </p>
         </div>
-    </div>
-
-    <!-- Contact.ME -->
-    <div class="content-section">
-        <h2 class="section-title">
-            <span class="section-title-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 6C3 4.89543 3.89543 4 5 4H9.58579C9.851 4 10.1054 4.10536 10.2929 4.29289L12.7071 6.70711C12.8946 6.89464 13.149 7 13.4142 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5"/>
-                </svg>
-            </span>
-            <span>&lt;Contact.ME&gt;</span>
-        </h2>
-        <div class="contact-content">
-            <p>欢迎反馈、建议和贡献！</p>
-            <div class="contact-links">
-                <a href="https://github.com/yourusername/openEar" target="_blank" class="contact-link">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-                    </svg>
-                    GitHub
-                </a>
-                <a href="mailto:contact@opear.com" class="contact-link">
-                    <span>📧</span>
-                    Email
-                </a>
-                <a href="#" class="contact-link">
-                    <span>💬</span>
-                    Issues
-                </a>
-            </div>
+        
+        <!-- 底部信息 -->
+        <div class="minecraft-footer">
+            <div class="minecraft-version">Earcraft 1.0.0</div>
+            <div class="minecraft-copyright">© 2025 Earcraft - 交互式听力训练平台</div>
         </div>
     </div>
 </div>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}openEar - 交互式听力训练{% endblock %}</title>
+    <title>{% block title %}Earcraft - 交互式听力训练{% endblock %}</title>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
     {% block extra_css %}{% endblock %}
@@ -14,12 +14,12 @@
             <div class="nav-left">
                 <a href="{{ url_for('index') }}" class="nav-logo">
                     <span class="logo-icon">🎵</span>
-                    <span class="logo-text">openEar</span>
+                    <span class="logo-text">Earcraft</span>
                 </a>
             </div>
             <div class="nav-center">
                 <a href="{{ url_for('index') }}" class="nav-link">练习</a>
-                <a href="#" class="nav-link">如何练习</a>
+                <a href="{{ url_for('about') }}" class="nav-link">关于</a>
                 <a href="#" class="nav-link">统计</a>
             </div>
             <div class="nav-right">

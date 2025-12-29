@@ -25,34 +25,39 @@ def load_user(user_id):
 # 练习类型定义
 EXERCISE_TYPES = {
     'interval': {
-        'name': '音程辨认',
-        'name_en': 'Intervals',
-        'icon': 'minecraft/我的世界锤子_爱给网_aigei_com.png',  # 锤子 - 敲击音程
-        'description': '识别两个音符之间的音程关系'
+        'name': '音程之镐',
+        'name_en': 'Interval Pickaxe',
+        'icon': 'minecrafts/item/ItemSprite_golden-pickaxe.png',  # 金镐 - 工具合成
+        'description': '识别两个音符之间的音程关系',
+        'category': '工具合成'
     },
     'scale_degree': {
-        'name': '音阶内音辨认',
-        'name_en': 'Scale Degrees',
-        'icon': 'minecraft/我的世界-工作台_爱给网_aigei_com.png',  # 工作台 - 构建音阶
-        'description': '识别音阶中的特定音级'
+        'name': '音阶基岩',
+        'name_en': 'Scale Bedrock',
+        'icon': 'minecrafts/item/ItemSprite_lapis-lazuli.png',  # 青金石 - 勘探矿脉
+        'description': '识别音阶中的特定音级',
+        'category': '勘探矿脉'
     },
     'chord_quality': {
-        'name': '和弦性质',
-        'name_en': 'Chord Quality',
-        'icon': 'minecraft/我的世界钻石_爱给网_aigei_com.png',  # 钻石 - 珍贵的和弦
-        'description': '识别和弦的类型和性质'
+        'name': '和弦生物',
+        'name_en': 'Chord Mob',
+        'icon': 'minecrafts/mob/ZombieFace.png',  # 僵尸 - 图鉴检索
+        'description': '识别和弦的类型和性质',
+        'category': '图鉴检索'
     },
     'chord_progression': {
         'name': '和弦进行',
-        'name_en': 'Chord Progressions',
-        'icon': 'minecraft/我的世界tnt_爱给网_aigei_com.png',  # TNT - 爆炸性的和弦进行
-        'description': '识别和弦进行的模式'
+        'name_en': 'Chord Progression',
+        'icon': 'minecrafts/item/ItemSprite_redstone.png',  # 红石 - 红石电路
+        'description': '识别和弦进行的模式',
+        'category': '红石电路'
     },
     'melody': {
         'name': '旋律片段',
         'name_en': 'Melody',
-        'icon': 'minecraft/金锭_爱给网_aigei_com.png',  # 金锭 - 珍贵的旋律
-        'description': '识别音阶中的旋律片段'
+        'icon': 'minecrafts/item/ItemSprite_music-disc-11.png',  # 音乐唱片 - 旋律
+        'description': '识别音阶中的旋律片段',
+        'category': '旋律探索'
     }
 }
 
@@ -230,6 +235,13 @@ def create_tables():
 def index():
     """首页 - 练习选择"""
     return render_template('index.html', 
+                         exercise_types=EXERCISE_TYPES,
+                         current_user=current_user)
+
+@app.route('/about')
+def about():
+    """关于页面"""
+    return render_template('about.html', 
                          exercise_types=EXERCISE_TYPES,
                          current_user=current_user)
 
