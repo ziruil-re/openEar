@@ -353,13 +353,28 @@
         </h2>
         <div class="readme-content">
             <p>
-                <strong>openEar</strong> 是一个 AI 驱动的交互式听力训练平台，专为进阶乐手和卧室音乐人设计。
-                本项目基于著名爵士教育家 <strong>Jamey Aebersold</strong> 的《Jazz Ear Training》方法论，结合 AI 技术，
-                提供从基础音程识别到复杂和弦进行的全方位训练。
+                <strong>openEar</strong> 是一个 AI 驱动的交互式听力训练平台，基于著名爵士教育家 <strong>Jamey Aebersold</strong> 的《Jazz Ear Training》方法论开发。
             </p>
             <p>
-                通过 AI 智能提取和整理的知识库笔记，<strong>openEar</strong> 能够为进阶乐手和卧室音乐人提供
-                个性化的练习方案和实时反馈，让听力训练变得高效而有趣。
+                <strong>技术栈：</strong>
+            </p>
+            <ul style="margin: 12px 0; padding-left: 20px; color: var(--hf-text-secondary); line-height: 1.8;">
+                <li><strong>后端框架：</strong>Flask + Flask-Login + Flask-SQLAlchemy</li>
+                <li><strong>数据库：</strong>SQLite（SQLAlchemy ORM）</li>
+                <li><strong>音频处理：</strong>pydub, numpy, scipy</li>
+                <li><strong>前端：</strong>原生 HTML/CSS/JavaScript</li>
+            </ul>
+            <p>
+                <strong>AI 技术应用：</strong>
+            </p>
+            <ul style="margin: 12px 0; padding-left: 20px; color: var(--hf-text-secondary); line-height: 1.8;">
+                <li>利用 <strong>Whisper</strong> 进行音频转录，提取教学视频中的知识内容</li>
+                <li>使用 <strong>AI 多模态提取</strong> 处理 PDF 教材（《爵士乐宝典》等），提取乐谱和理论分析</li>
+                <li>智能整理和关联音乐理论概念与真实歌曲片段，构建知识库</li>
+                <li>自动生成练习内容和对应的理论解析，提升学习效率</li>
+            </ul>
+            <p>
+                通过 AI 技术，<strong>openEar</strong> 实现了从原始教材到结构化知识库的自动化处理，让听力训练变得更加系统和高效。
             </p>
         </div>
     </div>
@@ -383,11 +398,11 @@
                     </svg>
                     GitHub
                 </a>
-                <a href="mailto:contact@opear.com" class="contact-link">
+                <a href="mailto:zrliu94@outlook.com" class="contact-link">
                     <span>📧</span>
                     Email
                 </a>
-                <a href="#" class="contact-link">
+                <a href="https://github.com/ziruil-re/openEar/issues" target="_blank" class="contact-link">
                     <span>💬</span>
                     Issues
                 </a>
