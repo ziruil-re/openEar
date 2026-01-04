@@ -208,10 +208,9 @@ function applySettings() {
         settings.key = formData.get('key');
         settings.octave = formData.get('octave');
         settings.octave_range = formData.get('octave_range');
-    } else if (exerciseType === 'chord_quality') {
-        settings.key = formData.get('key');
-        settings.chord_types = formData.getAll('chord_types');
-        settings.roman_numerals = formData.getAll('roman_numerals');
+        } else if (exerciseType === 'chord_quality') {
+            settings.roots = formData.getAll('roots');
+            settings.chord_types = formData.getAll('chord_types');
     }
     
     // 保存到sessionStorage
@@ -338,17 +337,12 @@ function loadQuestion() {
             params.append('octave_range', settings.octave_range);
         }
     } else if (exerciseType === 'chord_quality') {
-        if (settings.key) {
-            params.append('key', settings.key);
+        if (settings.roots && settings.roots.length > 0) {
+            params.append('roots', settings.roots.join(','));
         }
         if (settings.chord_types && settings.chord_types.length > 0) {
             params.append('chord_types', settings.chord_types.join(','));
         }
-        // 确保roman_numerals有值，如果没有则使用默认值['I']
-        const romanNumerals = settings.roman_numerals && settings.roman_numerals.length > 0 
-            ? settings.roman_numerals 
-            : ['I'];
-        params.append('roman_numerals', romanNumerals.join(','));
     }
     
     // 调用API获取题目
@@ -402,20 +396,14 @@ function displayQuestion(data) {
                 </p>
                 ` : ''}
                 <div id="interval-audio-container">
-                    ${data.audio_files ? `
-                    <button class="play-audio-btn" onclick="playIntervalAudio()" id="play-interval-btn">
-                        <span>▶️</span> 播放音程
-                    </button>
-                    ` : `
                     <audio id="audioPlayer" controls preload="metadata">
-                        <source src="/static/audio/${data.audio_file}" type="audio/wav">
+                        <source src="/static/audio/${data.audio_file}" type="audio/mpeg">
                         您的浏览器不支持音频播放。
                     </audio>
                     <br>
                     <button class="play-audio-btn" onclick="playAudio()">
-                        <span>▶️</span> 播放音频
+                        <span>▶️</span> 播放音程
                     </button>
-                    `}
                 </div>
             </div>
         `;
@@ -513,8 +501,7 @@ function displayQuestion(data) {
             <div class="audio-player-container">
                 <h3 style="font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600; color: #000000; margin-bottom: 8px; text-align: left;">🎧 请听和弦，选择正确的和弦类型： ${progressText}</h3>
                 <p style="font-size: 13px; color: #606060; margin-bottom: 8px; font-family: 'JetBrains Mono', 'Space Mono', monospace; text-align: left;">
-                    调性：<strong style="color: #000000;">${data.key || ''}</strong> | 
-                    和弦级数：<strong style="color: #000000;">${data.roman_numeral || ''}</strong>
+                    根音：<strong style="color: #000000;">${data.root_note || ''}</strong>
                 </p>
                 <div id="chord-audio-container">
                     <p style="font-size: 12px; color: #606060; margin-bottom: 8px; font-family: 'JetBrains Mono', 'Space Mono', monospace;">
@@ -549,8 +536,8 @@ function displayQuestion(data) {
             </div>
         `;
         
-        // 存储和弦音频文件列表
-        window.chordAudioFiles = data.chord_audio_files || [];
+        // 存储和弦音频文件（单个文件）
+        window.chordAudioFile = data.chord_audio_file || null;
     }
     
     questionArea.innerHTML = questionHtml;
@@ -610,10 +597,8 @@ function selectAnswer(answer) {
         exercise_type: window.exerciseType,
         note1: window.currentQuestion.note1,
         note2: window.currentQuestion.note2,
-        audio_files: window.currentQuestion.audio_files,
+        audio_file: window.currentQuestion.audio_file,
         scale_name: window.currentQuestion.scale_name,
-        key: window.currentQuestion.key,
-        roman_numeral: window.currentQuestion.roman_numeral,
         root_note: window.currentQuestion.root_note
     };
     
@@ -756,189 +741,6 @@ function playAudio() {
 
 // 播放完整音阶音频（已拼接好的8个音符，每个0.5秒，总共4秒）
 
-// 播放音程音频（使用两个音符文件，每个0.5秒）
-function playIntervalAudio() {
-    if (!window.currentQuestion || !window.currentQuestion.audio_files) {
-        console.error('没有音程音频文件');
-        return;
-    }
-    
-    const audioFiles = window.currentQuestion.audio_files;
-    const note1File = audioFiles.note1;
-    const note2File = audioFiles.note2;
-    const direction = audioFiles.direction || 'up';
-    
-    // 更新按钮状态
-    const playBtn = document.getElementById('play-interval-btn');
-    const originalBtnText = playBtn ? playBtn.innerHTML : '';
-    
-    if (playBtn) {
-        playBtn.disabled = true;
-        playBtn.innerHTML = '<span>⏳</span> 加载中...';
-    }
-    
-    // 停止之前播放的音频
-    if (window.intervalAudioContexts) {
-        window.intervalAudioContexts.forEach(ctx => {
-            if (ctx.audio) {
-                ctx.audio.pause();
-                ctx.audio.currentTime = 0;
-            }
-        });
-    }
-    
-    window.intervalAudioContexts = [];
-    
-    // 检测移动端
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    // 先播放第一个音符（0.5秒）
-    const audio1 = new Audio(`/static/audio/${note1File}`);
-    
-    // 移动端使用 metadata 预加载
-    if (isMobile) {
-        audio1.preload = 'metadata';
-    } else {
-        audio1.preload = 'auto';
-    }
-    
-    let audio1Ready = false;
-    
-    const handleAudio1Ready = () => {
-        if (audio1Ready) return;
-        audio1Ready = true;
-        
-        // 设置播放时长为0.5秒
-        audio1.addEventListener('timeupdate', () => {
-            if (audio1.currentTime >= 0.5) {
-                audio1.pause();
-                audio1.currentTime = 0;
-            }
-        });
-        
-        // 播放第一个音符
-        const playPromise = audio1.play();
-        if (playPromise !== undefined) {
-            playPromise.then(() => {
-                if (playBtn) {
-                    playBtn.innerHTML = originalBtnText || '<span>▶️</span> 播放音程';
-                    playBtn.disabled = false;
-                }
-            }).catch(e => {
-                console.error('播放第一个音符失败:', e);
-                if (playBtn) {
-                    playBtn.innerHTML = originalBtnText || '<span>▶️</span> 播放音程';
-                    playBtn.disabled = false;
-                }
-                // 移动端可能需要用户交互，提示用户
-                if (isMobile && (e.name === 'NotAllowedError' || e.name === 'NotSupportedError')) {
-                    console.warn('移动端音频播放需要用户交互');
-                }
-            });
-        }
-    };
-    
-    // 监听加载完成
-    if (audio1.readyState >= 2) {
-        // 已经加载了元数据
-        handleAudio1Ready();
-    } else {
-        audio1.addEventListener('loadedmetadata', handleAudio1Ready, { once: true });
-        audio1.addEventListener('canplay', handleAudio1Ready, { once: true });
-        audio1.addEventListener('canplaythrough', handleAudio1Ready, { once: true });
-        
-        // 强制加载
-        audio1.load();
-        
-        // 移动端：如果加载超时，恢复按钮状态
-        if (isMobile) {
-            setTimeout(() => {
-                if (!audio1Ready && playBtn) {
-                    playBtn.innerHTML = originalBtnText || '<span>▶️</span> 播放音程';
-                    playBtn.disabled = false;
-                }
-            }, 3000); // 3秒超时
-        }
-    }
-    
-    audio1.addEventListener('ended', () => {
-        // 第一个音符播放完后立即播放第二个音符（0.5秒）
-        const audio2 = new Audio(`/static/audio/${note2File}`);
-        if (isMobile) {
-            audio2.preload = 'metadata';
-        } else {
-            audio2.preload = 'auto';
-        }
-        
-        let audio2Ready = false;
-        const handleAudio2Ready = () => {
-            if (audio2Ready) return;
-            audio2Ready = true;
-            
-            audio2.addEventListener('timeupdate', () => {
-                if (audio2.currentTime >= 0.5) {
-                    audio2.pause();
-                    audio2.currentTime = 0;
-                }
-            });
-            audio2.play().catch(e => {
-                console.error('播放第二个音符失败:', e);
-            });
-        };
-        
-        if (audio2.readyState >= 2) {
-            handleAudio2Ready();
-        } else {
-            audio2.addEventListener('loadedmetadata', handleAudio2Ready, { once: true });
-            audio2.addEventListener('canplay', handleAudio2Ready, { once: true });
-            audio2.load();
-        }
-        
-        window.intervalAudioContexts.push({ audio: audio2 });
-    });
-    
-    // 0.5秒后停止第一个音符并开始播放第二个（备用方案）
-    setTimeout(() => {
-        if (audio1 && !audio1.paused) {
-            audio1.pause();
-            const audio2 = new Audio(`/static/audio/${note2File}`);
-            if (isMobile) {
-                audio2.preload = 'metadata';
-            } else {
-                audio2.preload = 'auto';
-            }
-            
-            let audio2Ready = false;
-            const handleAudio2Ready = () => {
-                if (audio2Ready) return;
-                audio2Ready = true;
-                
-                audio2.addEventListener('timeupdate', () => {
-                    if (audio2.currentTime >= 0.5) {
-                        audio2.pause();
-                        audio2.currentTime = 0;
-                    }
-                });
-                audio2.play().catch(e => {
-                    console.error('播放第二个音符失败:', e);
-                });
-            };
-            
-            if (audio2.readyState >= 2) {
-                handleAudio2Ready();
-            } else {
-                audio2.addEventListener('loadedmetadata', handleAudio2Ready, { once: true });
-                audio2.addEventListener('canplay', handleAudio2Ready, { once: true });
-                audio2.load();
-            }
-            
-            window.intervalAudioContexts.push({ audio: audio2 });
-        }
-    }, 500);
-    
-    window.intervalAudioContexts.push({ audio: audio1 });
-}
-
 // 重复播放音频
 function repeatAudio() {
     const audioPlayer = document.getElementById('audioPlayer');
@@ -950,41 +752,25 @@ function repeatAudio() {
     }
 }
 
-// 播放和弦音频（同时播放多个音符）
+// 播放和弦音频（单个文件）
 function playChordAudio() {
-    if (!window.chordAudioFiles || window.chordAudioFiles.length === 0) {
+    if (!window.chordAudioFile) {
         console.error('没有和弦音频文件');
         return;
     }
     
     // 停止之前播放的音频
-    if (window.chordAudioContexts) {
-        window.chordAudioContexts.forEach(ctx => {
-            if (ctx.audioContext) {
-                ctx.audioContext.close();
-            }
-        });
+    if (window.chordAudioPlayer) {
+        window.chordAudioPlayer.pause();
+        window.chordAudioPlayer.currentTime = 0;
     }
     
-    window.chordAudioContexts = [];
+    // 创建新的音频播放器
+    const audio = new Audio(`/static/audio/${window.chordAudioFile}`);
+    window.chordAudioPlayer = audio;
     
-    // 同时播放所有和弦音符
-    window.chordAudioFiles.forEach((audioFile, index) => {
-        const audio = new Audio(`/static/audio/${audioFile}`);
-        const audioContext = {
-            audio: audio,
-            audioContext: null
-        };
-        
-        audio.addEventListener('ended', () => {
-            audioContext.audioContext = null;
-        });
-        
-        audio.play().catch(e => {
-            console.error(`播放和弦音符 ${index + 1} 失败:`, e);
-        });
-        
-        window.chordAudioContexts.push(audioContext);
+    audio.play().catch(e => {
+        console.error('播放和弦音频失败:', e);
     });
 }
 
@@ -1020,13 +806,12 @@ document.addEventListener('DOMContentLoaded', () => {
             defaultSettings.octave = octave;
             defaultSettings.octave_range = octaveRange;
         } else if (exerciseType === 'chord_quality') {
-            const key = document.querySelector('select[name="key"]')?.value || 'C';
+            const allRoots = Array.from(document.querySelectorAll('input[name="roots"]')).map(cb => cb.value);
+            const checkedRoots = Array.from(document.querySelectorAll('input[name="roots"]:checked')).map(cb => cb.value);
             const checkedChordTypes = Array.from(document.querySelectorAll('input[name="chord_types"]:checked')).map(cb => cb.value);
-            const checkedRomanNumerals = Array.from(document.querySelectorAll('input[name="roman_numerals"]:checked')).map(cb => cb.value);
-            defaultSettings.key = key;
-            defaultSettings.chord_types = checkedChordTypes.length > 0 ? checkedChordTypes : ['major', 'minor', 'diminished', 'dominant7th', 'major7th', 'minor7th'];
-            // 默认只选择I级
-            defaultSettings.roman_numerals = checkedRomanNumerals.length > 0 ? checkedRomanNumerals : ['I'];
+            // 默认全选所有根音
+            defaultSettings.roots = checkedRoots.length > 0 ? checkedRoots : allRoots;
+            defaultSettings.chord_types = checkedChordTypes.length > 0 ? checkedChordTypes : ['major', 'minor'];
         }
         
         sessionStorage.setItem('practice_settings', JSON.stringify(defaultSettings));
@@ -1036,10 +821,16 @@ document.addEventListener('DOMContentLoaded', () => {
         let needUpdate = false;
         
         if (exerciseType === 'chord_quality') {
-            // 如果没有roman_numerals字段，从表单中读取或使用默认值
-            if (!settings.roman_numerals || settings.roman_numerals.length === 0) {
-                const checkedRomanNumerals = Array.from(document.querySelectorAll('input[name="roman_numerals"]:checked')).map(cb => cb.value);
-                settings.roman_numerals = checkedRomanNumerals.length > 0 ? checkedRomanNumerals : ['I'];
+            // 如果没有roots字段，从表单中读取或使用默认值
+            if (!settings.roots || settings.roots.length === 0) {
+                const checkedRoots = Array.from(document.querySelectorAll('input[name="roots"]:checked')).map(cb => cb.value);
+                settings.roots = checkedRoots.length > 0 ? checkedRoots : ['C'];
+                needUpdate = true;
+            }
+            // 如果没有chord_types字段，从表单中读取或使用默认值
+            if (!settings.chord_types || settings.chord_types.length === 0) {
+                const checkedChordTypes = Array.from(document.querySelectorAll('input[name="chord_types"]:checked')).map(cb => cb.value);
+                settings.chord_types = checkedChordTypes.length > 0 ? checkedChordTypes : ['major', 'minor'];
                 needUpdate = true;
             }
         }

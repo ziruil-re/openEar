@@ -331,6 +331,95 @@ def generate_interval_audio(note1, note2, duration=1.0):
         print(f"生成音频失败: {e}")
         return False
 
+def generate_chord_audio(chord_notes, duration=2.0):
+    """
+    生成和弦音频文件（多个音符同时播放）
+    
+    参数:
+        chord_notes: 音符名称列表，如 ['C4', 'E4', 'G4']
+        duration: 音频时长（秒），默认2秒
+    
+    返回:
+        成功返回相对路径（如 'chords/C4_E4_G4_2sec.mp3'），失败返回 None
+        如果文件已存在，直接返回路径（复用）
+    """
+    try:
+        from pydub import AudioSegment
+        
+        # 转换音符名称格式（用于音源文件）
+        def convert_note_name(note_name):
+            if '#' in note_name:
+                parts = note_name.split('#')
+                if len(parts) == 2:
+                    note_letter, octave = parts
+                    return f"{note_letter}s{octave}"
+            return note_name
+        
+        # 生成文件名（安全格式）
+        safe_notes = [convert_note_name(note).replace('#', 's') for note in chord_notes]
+        filename = '_'.join(safe_notes) + f'_{int(duration)}sec.mp3'
+        
+        # 创建输出目录
+        chords_dir = os.path.join(basedir, 'static', 'audio', 'chords')
+        os.makedirs(chords_dir, exist_ok=True)
+        
+        # 输出文件路径
+        output_path = os.path.join(chords_dir, filename)
+        
+        # 如果文件已存在，直接返回（复用）
+        if os.path.exists(output_path):
+            print(f"♻️ 复用已存在的和弦音频: {filename}")
+            return f"chords/{filename}"
+        
+        # 检查音源文件是否存在
+        piano_samples_dir = os.path.join(basedir, 'static', 'audio', 'samples', 'piano')
+        
+        # 加载所有音符音频
+        audio_segments = []
+        for note in chord_notes:
+            note_openear = convert_note_name(note)
+            note_file = os.path.join(piano_samples_dir, f"{note_openear}.mp3")
+            
+            if not os.path.exists(note_file):
+                print(f"⚠️ 和弦音符文件不存在: {note} -> {note_openear} -> {note_file}")
+                return None
+            
+            try:
+                # 使用 pydub 加载 MP3 文件
+                audio = AudioSegment.from_mp3(note_file)
+                # 裁剪到指定时长
+                audio = audio[:int(duration * 1000)]  # pydub 使用毫秒
+                audio_segments.append(audio)
+            except Exception as e:
+                print(f"⚠️ 加载音符文件失败 {note_file}: {e}")
+                return None
+        
+        if not audio_segments:
+            print("⚠️ 没有可用的音频片段")
+            return None
+        
+        # 混合所有音频（同时播放）
+        # pydub 的 overlay 方法可以混合多个音频
+        mixed_audio = audio_segments[0]
+        for audio_seg in audio_segments[1:]:
+            mixed_audio = mixed_audio.overlay(audio_seg)
+        
+        # 导出为 MP3
+        mixed_audio.export(output_path, format="mp3")
+        
+        print(f"✅ 生成和弦音频: {filename}")
+        # 返回相对路径
+        return f"chords/{filename}"
+        
+    except ImportError:
+        print("⚠️ pydub 未安装，无法生成和弦音频")
+        return None
+    except Exception as e:
+        print(f"❌ 生成和弦音频失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
 # 加载Tips和歌曲数据
 def load_tips_data():
     """从数据文件加载Tips"""
@@ -635,7 +724,6 @@ def practice(exercise_type):
                          scales=SCALES,
                          keys=KEYS,
                          chord_types=CHORD_TYPES,
-                         roman_numerals=list(ROMAN_NUMERAL_CHORDS.keys()),
                          tips=tips_data.get(exercise_type, {}),
                          songs_data=songs_data,  # 传递完整的songs_data
                          songs=songs_data.get(exercise_type, {}),  # 向后兼容
@@ -1114,12 +1202,50 @@ def generate_question(exercise_type):
                     'msg': f'音源文件不存在: {note1} ({note1_openear}) 或 {note2} ({note2_openear})。请检查文件路径: {piano_samples_dir}'
                 })
             
-            # 返回两个音符的文件路径，前端将使用 Web Audio API 播放
-            audio_files = {
-                'note1': f"samples/piano/{note1_openear}.mp3",
-                'note2': f"samples/piano/{note2_openear}.mp3",
-                'direction': direction
-            }
+            # 生成拼接的音频文件（每个音符1秒，无缝衔接）
+            try:
+                from pydub import AudioSegment
+                
+                # 生成输出文件名（保持与现有文件一致：每个音符1秒）
+                safe_note1 = note1_openear.replace('#', 'sharp')
+                safe_note2 = note2_openear.replace('#', 'sharp')
+                interval_dir = os.path.join(basedir, 'static', 'audio', 'interval')
+                os.makedirs(interval_dir, exist_ok=True)
+                output_filename = f"{safe_note1}_{safe_note2}_1sec.mp3"
+                output_path = os.path.join(interval_dir, output_filename)
+                
+                # 检查是否已有 .wav 或 .mp3 文件（兼容旧格式）
+                wav_path = output_path.replace('.mp3', '.wav')
+                if os.path.exists(wav_path):
+                    # 如果已有 .wav 文件，使用它（兼容旧文件）
+                    audio_file = f"interval/{os.path.basename(wav_path)}"
+                elif os.path.exists(output_path):
+                    # 如果已有 .mp3 文件，直接使用
+                    audio_file = f"interval/{output_filename}"
+                else:
+                    # 加载两个音符文件
+                    audio1 = AudioSegment.from_mp3(note1_file)
+                    audio2 = AudioSegment.from_mp3(note2_file)
+                    
+                    # 每个音符取1秒（1000毫秒），与现有文件保持一致
+                    audio1_1sec = audio1[:1000]
+                    audio2_1sec = audio2[:1000]
+                    
+                    # 拼接两个音符（无缝衔接）
+                    combined_audio = audio1_1sec + audio2_1sec
+                    
+                    # 导出为MP3
+                    combined_audio.export(output_path, format="mp3")
+                    audio_file = f"interval/{output_filename}"
+            except Exception as e:
+                # 如果拼接失败，返回错误
+                print(f"⚠️ 生成拼接音频失败: {e}")
+                import traceback
+                traceback.print_exc()
+                return jsonify({
+                    'status': 'error',
+                    'msg': f'生成音频失败: {str(e)}'
+                })
             
             # 准备选项
             all_intervals = list(INTERVALS.values())
@@ -1168,7 +1294,7 @@ def generate_question(exercise_type):
             try:
                 return jsonify({
                     'status': 'ok',
-                    'audio_files': audio_files,  # 音源格式
+                    'audio_file': audio_file,  # 拼接好的音频文件
                     'note1': note1,
                     'note2': note2,
                     'options': [next((interval['cn'] for interval in all_intervals if interval['name'] == opt), opt) for opt in options],
@@ -1374,27 +1500,30 @@ def generate_question(exercise_type):
         
         elif exercise_type == 'chord_quality':
             # 获取前端传来的参数
-            key = request.args.get('key', 'C')
-            included_roman_numerals = request.args.get('roman_numerals', 'I,ii,iii,IV,V,vi').split(',')
+            # 根音可以多选
+            selected_roots = request.args.get('roots', 'C').split(',')
+            # 过滤有效的根音
+            valid_roots = [root for root in selected_roots if root in KEYS]
+            if not valid_roots:
+                valid_roots = ['C']
             
-            if key not in KEYS:
-                return jsonify({'status': 'error', 'msg': '无效的调性'})
+            # 从用户选择的根音中随机选择一个
+            root_note_letter = random.choice(valid_roots)
             
-            # 过滤有效的罗马数字
-            valid_roman_numerals = [rn for rn in included_roman_numerals if rn in ROMAN_NUMERAL_CHORDS]
-            if not valid_roman_numerals:
-                valid_roman_numerals = ['I', 'ii', 'iii', 'IV', 'V', 'vi']
+            # 获取用户选择的和弦类型
+            all_chord_types = list(CHORD_TYPES.keys())
+            # 默认包含：major, minor
+            default_included = ['major', 'minor']
+            included_types = request.args.get('chord_types', ','.join(default_included)).split(',')
+            included_types = [ct for ct in included_types if ct in all_chord_types]
+            if not included_types:
+                included_types = default_included
             
-            # 随机选择一个罗马数字和弦
-            roman_numeral = random.choice(valid_roman_numerals)
-            chord_info = ROMAN_NUMERAL_CHORDS[roman_numeral]
-            chord_type = chord_info['chord_type']
-            scale_degree = chord_info['scale_degree']
+            # 从用户选择的 chord_types 中随机选择一个和弦类型
+            chord_type = random.choice(included_types)
             
-            # 计算根音（在指定调性下）
-            key_idx = KEYS.index(key)
-            root_idx = (key_idx + scale_degree) % 12
-            root_note_letter = note_letters[root_idx]
+            # 计算根音索引
+            root_idx = KEYS.index(root_note_letter)
             
             # 选择八度（使用中间八度）
             octave = 4
@@ -1409,7 +1538,7 @@ def generate_question(exercise_type):
                 note_idx_in_octave = (root_idx + semitone_offset) % 12
                 note_letter = note_letters[note_idx_in_octave]
                 # 计算实际八度（考虑跨八度的情况）
-                actual_octave = octave + (root_idx + semitone_offset) // 12
+                actual_octave = octave + (semitone_offset // 12)
                 note_name = f"{note_letter}{actual_octave}"
                 chord_notes.append(note_name)
             
@@ -1422,23 +1551,16 @@ def generate_question(exercise_type):
                         return f"{note_letter}s{octave}"
                 return note_name
             
-            # 检查音源文件是否存在
-            piano_samples_dir = os.path.join(basedir, 'static', 'audio', 'samples', 'piano')
-            chord_audio_files = []
-            for note in chord_notes:
-                note_openear = convert_note_name(note)
-                note_file = os.path.join(piano_samples_dir, f"{note_openear}.mp3")
-                if os.path.exists(note_file):
-                    chord_audio_files.append(f"samples/piano/{note_openear}.mp3")
-                else:
-                    print(f"⚠️ 和弦音符文件不存在: {note} -> {note_openear} -> {note_file}")
+            # 生成和弦音频文件（如果不存在则生成，存在则复用）
+            chord_audio_file = generate_chord_audio(chord_notes, duration=2.0)
             
-            if not chord_audio_files:
-                return jsonify({'status': 'error', 'msg': '无法构建和弦音频文件列表'})
+            if not chord_audio_file:
+                return jsonify({'status': 'error', 'msg': '无法生成和弦音频文件'})
             
             # 生成根音音频文件路径（用于参考）- 使用4秒版本
             root_note_openear = convert_note_name(root_note)
-            root_audio_file = generate_root_audio_4sec(key, octave, root_note_openear, piano_samples_dir)
+            piano_samples_dir = os.path.join(basedir, 'static', 'audio', 'samples', 'piano')
+            root_audio_file = generate_root_audio_4sec(root_note_letter, octave, root_note_openear, piano_samples_dir)
             if not root_audio_file:
                 # 如果无法生成4秒版本，回退到原始文件
                 root_audio_file_path = os.path.join(piano_samples_dir, f"{root_note_openear}.mp3")
@@ -1448,18 +1570,8 @@ def generate_question(exercise_type):
                 else:
                     print(f"⚠️ 根音文件不存在: {root_note} -> {root_note_openear} -> {root_audio_file_path}")
             
-            # 准备选项（从允许的和弦类型中选择）
-            all_chord_types = list(CHORD_TYPES.keys())
-            # 默认包含：major, minor, diminished, dominant7th, major7th, minor7th
-            default_included = ['major', 'minor', 'diminished', 'dominant7th', 'major7th', 'minor7th']
-            included_types = request.args.get('chord_types', ','.join(default_included)).split(',')
-            included_types = [ct for ct in included_types if ct in all_chord_types]
-            if not included_types:
-                included_types = default_included
-            
-            # 确保正确答案在选项中
-            if chord_type not in included_types:
-                included_types.append(chord_type)
+            # included_types 已经在上面定义过了，这里不需要重新定义
+            # 确保正确答案在选项中（应该已经在included_types中了，因为chord_type是从included_types中随机选择的）
             
             # 如果选项少于4个，从所有和弦类型中补充
             if len(included_types) <= 4:
@@ -1490,12 +1602,10 @@ def generate_question(exercise_type):
             try:
                 return jsonify({
                     'status': 'ok',
-                    'chord_audio_files': chord_audio_files,  # 和弦音频文件列表（用于前端同时播放）
+                    'chord_audio_file': chord_audio_file,  # 和弦音频文件（单个文件，已混合）
                     'root_audio_file': root_audio_file,  # 根音音频文件（用于参考）
                     'chord_notes': chord_notes,  # 和弦音符列表（用于调试）
                     'root_note': root_note,  # 根音（用于显示）
-                    'roman_numeral': roman_numeral,  # 罗马数字（用于显示）
-                    'key': key,  # 调性（用于显示）
                     'options': [CHORD_TYPES[opt]['cn'] for opt in options],  # 选项（中文）
                     'option_values': options,  # 选项值（英文）
                     'correct_answer': CHORD_TYPES[chord_type]['cn'],  # 正确答案（中文）
