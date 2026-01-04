@@ -154,6 +154,11 @@ body {
     background: var(--hf-bg-secondary);
 }
 
+.nav-github-link:hover {
+    opacity: 1 !important;
+    color: var(--hf-text-primary);
+}
+
 .nav-btn {
     background: var(--hf-primary);
     color: white !important;

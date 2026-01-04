@@ -45,7 +45,7 @@
     margin: 12px 0 8px;
     padding: 12px 16px;
     border-radius: 6px;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     text-align: left;
     border: none;
@@ -75,15 +75,15 @@
     color: #991b1b;
 }
 
-/* 字体 - 简洁复古风格 */
+/* 字体 - 统一使用系统字体 */
 .practice-header h1 {
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 300;
     letter-spacing: 0.02em;
 }
 
 .sidebar-section h3 {
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     font-size: 13px;
     color: #1f2937;
@@ -102,7 +102,7 @@
     border: 1px solid #3b82f6;
     border-radius: 6px;
     color: #ffffff;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 14px;
     font-weight: 400;
     cursor: pointer;
@@ -124,9 +124,9 @@
 
 /* 侧边栏 */
 .sidebar {
-    width: 400px;
+    width: 700px;
     min-width: 280px;
-    max-width: 600px;
+    max-width: 700px;
     background: #ffffff !important;
     border: none !important;
     border-radius: 6px !important;
@@ -183,6 +183,8 @@
     flex: 1;
     overflow-y: auto;
     padding: 16px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* 侧边栏标签页 */
@@ -196,7 +198,7 @@
     padding: 8px 12px;
     background: transparent;
     border: none;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 13px;
     font-weight: 500;
     color: var(--text-secondary);
@@ -224,7 +226,7 @@
     border: none !important;
     border-radius: 6px !important;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
-    padding: 32px !important;
+    padding: 20px !important;
     min-height: calc(100vh - 120px);
 }
 
@@ -232,6 +234,8 @@
 /* 表单元素 - 应用设计原则：亲密性、对齐 */
 .form-group {
     margin-bottom: 24px; /* 对比：组与组之间有明显间距 */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* 亲密性：相关的表单项应该靠近 */
@@ -253,12 +257,14 @@
 
 /* 下拉菜单 - 简洁风格 */
 .form-select {
-    width: 100%;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box;
     padding: 10px 12px;
     padding-right: 32px;
     border: 2px solid #e5e7eb;
     background: #ffffff;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 14px;
     font-weight: 500;
     color: #1f2937;
@@ -270,6 +276,202 @@
     background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23374151' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 8px center;
+    display: block;
+}
+
+/* 多选下拉框特殊样式 */
+.form-select[multiple] {
+    background-image: none;
+    padding-right: 12px;
+    min-height: 120px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* AI秘籍下拉框强制样式 - 确保占满一行宽度 */
+.ai-secret-select-group {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 16px !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    padding: 0 !important;
+    position: relative !important;
+}
+
+/* 确保在sidebar-content中正确显示 */
+.sidebar-content .ai-secret-select-group {
+    width: calc(100% - 0px) !important;
+    max-width: calc(100% - 0px) !important;
+}
+
+.ai-secret-select-group label {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 自定义多选下拉框 */
+.custom-multiselect {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* 触发器按钮 */
+.custom-multiselect-trigger {
+    width: 100% !important;
+    padding: 10px 12px !important;
+    padding-right: 32px !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    background: #ffffff !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-size: 14px !important;
+    color: #1f2937 !important;
+    transition: all 0.15s ease !important;
+    box-sizing: border-box !important;
+}
+
+.custom-multiselect-trigger:hover {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1) !important;
+}
+
+.custom-multiselect-trigger.active {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.custom-multiselect-text {
+    flex: 1 !important;
+    text-align: left !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+.custom-multiselect-arrow {
+    font-size: 10px !important;
+    color: #6b7280 !important;
+    transition: transform 0.2s ease !important;
+    flex-shrink: 0 !important;
+    margin-left: 8px !important;
+}
+
+.custom-multiselect-trigger.active .custom-multiselect-arrow {
+    transform: rotate(180deg) !important;
+}
+
+/* 下拉浮窗 */
+.custom-multiselect-dropdown {
+    position: absolute !important;
+    top: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-top: 4px !important;
+    background: #ffffff !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    z-index: 1000 !important;
+    display: none !important;
+    max-height: 300px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.custom-multiselect-dropdown.show {
+    display: block !important;
+}
+
+/* 操作按钮区域 - 全选反选各占一行 */
+.custom-multiselect-actions {
+    padding: 8px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    background: #f9fafb !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 6px !important;
+}
+
+.custom-multiselect-action-btn {
+    width: 100% !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 4px !important;
+    color: #374151 !important;
+    cursor: pointer !important;
+    transition: all 0.15s ease !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    text-align: center !important;
+    box-sizing: border-box !important;
+}
+
+.custom-multiselect-action-btn:hover {
+    background: #f3f4f6 !important;
+    border-color: #3b82f6 !important;
+    color: #3b82f6 !important;
+}
+
+.custom-multiselect-action-btn:active {
+    background: #e5e7eb !important;
+    transform: translateY(1px) !important;
+}
+
+/* 选项列表 */
+.custom-multiselect-options {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding: 4px !important;
+}
+
+.custom-multiselect-option {
+    display: flex !important;
+    align-items: center !important;
+    padding: 8px 12px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease !important;
+    font-size: 14px !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    color: #1f2937 !important;
+    box-sizing: border-box !important;
+}
+
+.custom-multiselect-option:hover {
+    background: #f9fafb !important;
+}
+
+.custom-multiselect-option input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 8px !important;
+    cursor: pointer !important;
+    accent-color: #3b82f6 !important;
+    flex-shrink: 0 !important;
+}
+
+.custom-multiselect-option span {
+    flex: 1 !important;
+    text-align: left !important;
 }
 
 .form-select:hover {
@@ -305,7 +507,7 @@
     transition: all 0.15s ease;
     font-size: 14px;
     font-weight: 500;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     color: #1f2937;
 }
@@ -335,17 +537,21 @@
 /* 标签页内容 */
 .tab-content {
     display: none;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .tab-content.active {
     display: block;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .explanation-content {
     font-size: 13px;
     line-height: 1.6;
     color: var(--hf-text-secondary);
-    font-family: 'Nunito', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .explanation-content p {
@@ -374,7 +580,7 @@
     border: none;
     font-size: 12px;
     line-height: 1.5;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     border-radius: 4px;
 }
 
@@ -402,70 +608,16 @@
 }
 
 /* 统计栏 - 简洁复古风格 */
-.stats-bar {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 24px;
-    padding: 16px 24px;
-    background: #ffffff;
-    border: none;
-    border-radius: 6px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
 /* 标题行布局 */
-    .practice-header-title-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .exercise-actions-container {
-        bottom: 12px;
-        right: 12px;
-    }
-
-.stat-item {
-    flex: 1;
-    text-align: left; /* 对齐：左对齐而非居中 */
-    padding: 0 24px; /* 重复：统一内边距 */
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    position: relative;
+.practice-header-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* 亲密性：在每个统计项之间添加分隔线（除了第一个和最后一个） */
-.stat-item:not(:first-child)::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 8px;
-    bottom: 8px;
-    width: 1px;
-    background: #e5e7eb; /* 重复：统一边框颜色 */
-}
-
-.stat-label {
-    display: block;
-    font-size: 11px;
-    color: #9ca3af;
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 4px;
-    line-height: 1.4;
-}
-
-.stat-value {
-    display: block;
-    font-size: 24px;
-    font-weight: 700;
-    color: #1f2937;
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+.exercise-actions-container {
+    bottom: 12px;
+    right: 12px;
 }
 
 /* 题目区域 - 应用设计原则 */
@@ -485,10 +637,11 @@
 .audio-player-container {
     width: 100%;
     margin: 8px 0;
+    text-align: left;
 }
 
 .audio-player-container h3 {
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 300;
     color: #1f2937;
     margin-bottom: 8px;
@@ -505,7 +658,7 @@
 }
 
 .reference-audio-container h4 {
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     color: #1f2937;
     margin-bottom: 8px;
@@ -521,22 +674,23 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 20px;
+    padding: 8px 12px;
     margin: 0;
     background: #ffffff;
     border: none;
     border-radius: 6px;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
-    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: 13px;
     font-weight: 300;
     color: #1f2937;
     text-decoration: none;
     cursor: pointer;
     transition: all 0.15s ease;
     text-align: center;
-    min-width: 100px;
+    min-width: 60px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     line-height: 1.4;
+    flex: 0 0 auto;
 }
 
 .answer-option:hover,
@@ -579,7 +733,7 @@
     border: 1px solid #3b82f6;
     border-radius: 6px;
     color: #ffffff;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 14px;
     font-weight: 400;
     cursor: pointer;
@@ -633,7 +787,7 @@
     border-radius: 6px;
     margin-bottom: 16px;
     font-size: 13px;
-    font-family: 'Arial Narrow', 'Arial', 'Helvetica', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -687,21 +841,26 @@
         max-width: 100% !important;
         resize: none;
         order: 2;
-        overflow: visible;
+        overflow: hidden !important;
         position: relative;
         z-index: 1;
         margin: 0;
         padding: 0;
+        display: flex !important;
+        flex-direction: column !important;
+        max-height: 60vh !important;
     }
     
     .sidebar-content {
-        overflow-y: visible !important;
+        overflow-y: auto !important;
         overflow-x: hidden !important;
-        position: relative;
+        position: relative !important;
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
         padding: 16px !important;
+        flex: 1 !important;
+        -webkit-overflow-scrolling: touch !important;
     }
     
     .main-practice-area {
@@ -749,21 +908,18 @@
         margin-top: 0 !important;
     }
     
-    /* 确保标签页内容不重叠 */
-    .tab-content {
-        width: 100% !important;
-        max-width: 100% !important;
-        box-sizing: border-box !important;
-        overflow-x: hidden !important;
-        position: relative;
-    }
-    
-    /* 侧边栏头部 */
+    /* 侧边栏头部固定 */
     .sidebar-header {
         width: 100% !important;
         max-width: 100% !important;
         box-sizing: border-box !important;
         overflow-x: hidden !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        background: #ffffff !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        flex-shrink: 0 !important;
     }
     
     /* 标签页按钮 */
@@ -772,6 +928,43 @@
         max-width: 100% !important;
         box-sizing: border-box !important;
         overflow-x: hidden !important;
+        display: flex !important;
+        gap: 4px !important;
+        flex-wrap: nowrap !important;
+    }
+    
+    .sidebar-tab {
+        flex: 1 !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    
+    /* 确保标签页内容不重叠 */
+    .tab-content {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+        overflow-x: hidden !important;
+        position: relative !important;
+        display: none !important;
+        min-height: 0 !important;
+    }
+    
+    .tab-content.active {
+        display: block !important;
+        width: 100% !important;
+    }
+    
+    /* 侧边栏内容区域 */
+    .sidebar-content {
+        position: relative !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex: 1 !important;
+        min-height: 0 !important;
     }
     
     /* 极简化按钮和容器 */
@@ -788,23 +981,6 @@
     .question-area {
         padding: 16px !important;
         border-width: 1px !important;
-    }
-    
-    .stats-bar {
-        flex-direction: row;
-        gap: 8px;
-        padding: 12px;
-        flex-wrap: wrap;
-    }
-    
-    .stat-item {
-        flex: 1;
-        min-width: calc(50% - 4px);
-        padding: 10px;
-    }
-    
-    .stat-value {
-        font-size: 18px;
     }
     
     .checkbox-group {

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from models import db, User, PracticeSession, UserAnswer, Question
@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, date
 import random
 import os
 import json
+import logging
+import sys
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -13,6 +15,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'opear_secret_key_2025'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, '..', 'opear.db')
+# 禁用静态文件缓存（开发环境）
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 db.init_app(app)
 
 login_manager = LoginManager()
@@ -22,6 +26,24 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+# 添加缓存控制头
+@app.after_request
+def set_cache_control(response: Response):
+    """设置缓存控制头，防止浏览器缓存HTML页面"""
+    # 对于HTML页面，禁用缓存
+    if response.content_type and 'text/html' in response.content_type:
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    # 对于JSON响应，也禁用缓存
+    elif response.content_type and 'application/json' in response.content_type:
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+    # 对于静态文件（CSS/JS），设置较短的缓存时间（开发环境）
+    elif response.content_type and any(ct in response.content_type for ct in ['text/css', 'application/javascript', 'text/javascript']):
+        response.headers['Cache-Control'] = 'no-cache, must-revalidate'
+    return response
 
 # 练习类型定义
 EXERCISE_TYPES = {
@@ -46,19 +68,29 @@ EXERCISE_TYPES = {
         'description': '识别和弦的类型和性质',
         'category': '和弦训练'
     },
+    'chord_inversion': {
+        'name': '和弦转位',
+        'name_en': 'Chord Inversion',
+        'icon': '🔄',
+        'description': '识别和弦的转位形式',
+        'category': '和弦训练',
+        'status': 'developing'
+    },
     'chord_progression': {
         'name': '和弦进行',
         'name_en': 'Chord Progression',
         'icon': '🎶',
         'description': '识别和弦进行的模式',
-        'category': '进阶训练'
+        'category': '进阶训练',
+        'status': 'developing'
     },
     'melody': {
         'name': '旋律片段',
         'name_en': 'Melody',
         'icon': '💿',
         'description': '识别音阶中的旋律片段',
-        'category': '旋律训练'
+        'category': '旋律训练',
+        'status': 'developing'
     }
 }
 
@@ -96,12 +128,6 @@ SCALES = {
         'pattern': [0, 2, 4, 5, 7, 9, 11],  # 全全半全全全半
         'degrees': ['1', '2', '3', '4', '5', '6', '7']
     },
-    'minor': {
-        'name': '小调',
-        'name_en': 'Minor',
-        'pattern': [0, 2, 3, 5, 7, 8, 10],  # 全半全全半全全
-        'degrees': ['1', '2', 'b3', '4', '5', 'b6', 'b7']
-    },
     'pentatonic_major': {
         'name': '大调五声音阶',
         'name_en': 'Major Pentatonic',
@@ -130,6 +156,72 @@ SCALES = {
         'name': '布鲁斯音阶',
         'name_en': 'Blues',
         'pattern': [0, 3, 5, 6, 7, 10],
+        'degrees': ['1', 'b3', '4', 'b5', '5', 'b7']
+    },
+    'natural_minor': {
+        'name': '自然小调',
+        'name_en': 'Natural Minor',
+        'pattern': [0, 2, 3, 5, 7, 8, 10],  # 等同于minor
+        'degrees': ['1', '2', 'b3', '4', '5', 'b6', 'b7']
+    },
+    'harmonic_minor': {
+        'name': '和声小调',
+        'name_en': 'Harmonic Minor',
+        'pattern': [0, 2, 3, 5, 7, 8, 11],  # 第七音升高半音
+        'degrees': ['1', '2', 'b3', '4', '5', 'b6', '7']
+    },
+    'melodic_minor': {
+        'name': '旋律小调',
+        'name_en': 'Melodic Minor',
+        'pattern': [0, 2, 3, 5, 7, 9, 11],  # 上行：第六、七音升高半音
+        'degrees': ['1', '2', 'b3', '4', '5', '6', '7']
+    },
+    'ionian': {
+        'name': '伊奥尼亚调式',
+        'name_en': 'Ionian',
+        'pattern': [0, 2, 4, 5, 7, 9, 11],  # 等同于major
+        'degrees': ['1', '2', '3', '4', '5', '6', '7']
+    },
+    'lydian': {
+        'name': '利底亚调式',
+        'name_en': 'Lydian',
+        'pattern': [0, 2, 4, 6, 7, 9, 11],  # 第四音升高半音
+        'degrees': ['1', '2', '3', '#4', '5', '6', '7']
+    },
+    'phrygian': {
+        'name': '弗里几亚调式',
+        'name_en': 'Phrygian',
+        'pattern': [0, 1, 3, 5, 7, 8, 10],  # 第二音降低半音
+        'degrees': ['1', 'b2', 'b3', '4', '5', 'b6', 'b7']
+    },
+    'locrian': {
+        'name': '洛克里亚调式',
+        'name_en': 'Locrian',
+        'pattern': [0, 1, 3, 5, 6, 8, 10],  # 第二、五音降低半音
+        'degrees': ['1', 'b2', 'b3', '4', 'b5', 'b6', 'b7']
+    },
+    'aeolian': {
+        'name': '爱奥利亚调式',
+        'name_en': 'Aeolian',
+        'pattern': [0, 2, 3, 5, 7, 8, 10],  # 等同于natural_minor
+        'degrees': ['1', '2', 'b3', '4', '5', 'b6', 'b7']
+    },
+    'whole_tone': {
+        'name': '全音阶',
+        'name_en': 'Whole Tone',
+        'pattern': [0, 2, 4, 6, 8, 10],  # 全音阶（6个音）
+        'degrees': ['1', '2', '3', '#4', '#5', 'b7']
+    },
+    'diminished': {
+        'name': '减音阶',
+        'name_en': 'Diminished',
+        'pattern': [0, 2, 3, 5, 6, 8, 9, 11],  # 减音阶（8个音）
+        'degrees': ['1', '2', 'b3', '4', 'b5', 'b6', '6', '7']
+    },
+    'blues_scale': {
+        'name': '布鲁斯音阶',
+        'name_en': 'Blues Scale',
+        'pattern': [0, 3, 5, 6, 7, 10],  # 等同于blues
         'degrees': ['1', 'b3', '4', 'b5', '5', 'b7']
     }
 }
@@ -542,6 +634,8 @@ def practice(exercise_type):
                          intervals=INTERVALS,
                          scales=SCALES,
                          keys=KEYS,
+                         chord_types=CHORD_TYPES,
+                         roman_numerals=list(ROMAN_NUMERAL_CHORDS.keys()),
                          tips=tips_data.get(exercise_type, {}),
                          songs_data=songs_data,  # 传递完整的songs_data
                          songs=songs_data.get(exercise_type, {}),  # 向后兼容
@@ -550,6 +644,323 @@ def practice(exercise_type):
                          intervals_notes=intervals_notes,
                          scales_notes=scales_notes,
                          current_user=current_user)
+
+def generate_root_audio_4sec(key, octave, root_note_openear, piano_samples_dir):
+    """生成4秒的根音音频文件
+    
+    Args:
+        key: 调性（如 'C'）
+        octave: 八度（如 4）
+        root_note_openear: 根音名称（openEar格式，如 'C4'）
+        piano_samples_dir: 钢琴样本目录
+    
+    Returns:
+        成功返回文件路径（相对于 static/audio/），失败返回 None
+    """
+    try:
+        from pydub import AudioSegment
+    except ImportError as e:
+        # 如果没有pydub，直接返回None
+        print(f"⚠️ pydub 未安装，无法生成缩短版根音音频: {e}")
+        return None
+    
+    try:
+        # 构建输出文件名
+        safe_key = key.replace('#', 'sharp')
+        scale_dir = os.path.join(basedir, 'static', 'audio', 'scale')
+        
+        # 确保目录存在（移动端可能需要）
+        try:
+            os.makedirs(scale_dir, exist_ok=True)
+        except Exception as e:
+            print(f"⚠️ 无法创建目录 {scale_dir}: {e}")
+            print(f"   错误类型: {type(e).__name__}")
+            return None
+        
+        output_filename = f"{safe_key}_root_oct{octave}_4sec.mp3"
+        output_path = os.path.join(scale_dir, output_filename)
+        
+        # 如果文件已存在，直接返回
+        if os.path.exists(output_path):
+            print(f"✅ 使用已存在的缩短版根音音频: {output_path}")
+            return f"scale/{output_filename}"
+        
+        # 读取根音MP3文件
+        root_file = os.path.join(piano_samples_dir, f"{root_note_openear}.mp3")
+        if not os.path.exists(root_file):
+            print(f"⚠️ 根音文件不存在: {root_file}")
+            print(f"   查找的文件名: {root_note_openear}.mp3")
+            print(f"   目录: {piano_samples_dir}")
+            print(f"   目录是否存在: {os.path.exists(piano_samples_dir)}")
+            # 列出目录中的文件（调试用）
+            if os.path.exists(piano_samples_dir):
+                try:
+                    files = os.listdir(piano_samples_dir)
+                    print(f"   目录中的文件数量: {len(files)}")
+                    similar_files = [f for f in files if root_note_openear.split('s')[0] in f]
+                    if similar_files:
+                        print(f"   相似文件: {similar_files[:5]}")
+                    else:
+                        # 列出前几个文件作为参考
+                        print(f"   目录中的前5个文件: {files[:5]}")
+                except Exception as e:
+                    print(f"   无法列出目录文件: {e}")
+            return None
+        
+        # 加载MP3文件
+        try:
+            print(f"📂 加载根音文件: {root_file}")
+            audio_segment = AudioSegment.from_mp3(root_file)
+            print(f"   文件时长: {len(audio_segment)/1000:.2f}秒")
+        except Exception as e:
+            print(f"⚠️ 无法加载音频文件 {root_file}: {e}")
+            print(f"   错误类型: {type(e).__name__}")
+            import traceback
+            traceback.print_exc()
+            return None
+        
+        # 截取前4秒
+        audio_segment = audio_segment[:4000]  # 4秒 = 4000毫秒
+        
+        # 导出为MP3
+        try:
+            print(f"💾 导出缩短版根音音频: {output_path}")
+            audio_segment.export(output_path, format="mp3")
+            print(f"✅ 成功生成4秒根音音频: {output_path}")
+            return f"scale/{output_filename}"
+        except Exception as e:
+            print(f"⚠️ 无法导出音频文件 {output_path}: {e}")
+            print(f"   错误类型: {type(e).__name__}")
+            # 检查目录权限
+            if not os.access(scale_dir, os.W_OK):
+                print(f"   目录无写权限: {scale_dir}")
+            else:
+                print(f"   目录有写权限，可能是其他问题")
+            import traceback
+            traceback.print_exc()
+            return None
+        
+    except Exception as e:
+        print(f"❌ 生成根音音频失败: {e}")
+        print(f"   错误类型: {type(e).__name__}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+def generate_song_audio_1min(audio_path):
+    """生成1分钟版本的歌曲音频文件
+    
+    Args:
+        audio_path: 原始音频文件路径（相对于 static/audio/）
+        例如: "songs/Somewhere_Over_the_Rainbow_Unknown.mp3"
+    
+    Returns:
+        缩短后的音频文件路径（相对于 static/audio/），如果失败返回 None
+    """
+    try:
+        from pydub import AudioSegment
+        
+        # 构建完整路径
+        full_audio_path = os.path.join(basedir, 'static', 'audio', audio_path)
+        
+        if not os.path.exists(full_audio_path):
+            print(f"⚠️ 音频文件不存在: {full_audio_path}")
+            return None
+        
+        # 构建输出路径（在 songs_1min 目录下）
+        audio_dir = os.path.dirname(audio_path)  # "songs"
+        audio_filename = os.path.basename(audio_path)  # "Somewhere_Over_the_Rainbow_Unknown.mp3"
+        
+        # 创建缩短版本的目录
+        output_dir = os.path.join(basedir, 'static', 'audio', audio_dir + '_1min')
+        try:
+            os.makedirs(output_dir, exist_ok=True)
+        except Exception as e:
+            print(f"⚠️ 无法创建目录 {output_dir}: {e}")
+            return None
+        
+        output_path = os.path.join(output_dir, audio_filename)
+        
+        # 如果1分钟版本已存在，直接返回
+        if os.path.exists(output_path):
+            return os.path.join(audio_dir + '_1min', audio_filename)
+        
+        # 加载原始音频
+        try:
+            audio_segment = AudioSegment.from_mp3(full_audio_path)
+        except Exception as e:
+            print(f"⚠️ 无法加载音频文件 {full_audio_path}: {e}")
+            return None
+        
+        # 获取音频时长（毫秒）
+        duration_ms = len(audio_segment)
+        max_duration_ms = 60 * 1000  # 60秒 = 60000毫秒
+        
+        # 如果音频已经小于1分钟，直接返回原文件路径
+        if duration_ms <= max_duration_ms:
+            return audio_path
+        
+        # 截取前60秒
+        shortened_audio = audio_segment[:max_duration_ms]
+        
+        # 导出为MP3
+        try:
+            shortened_audio.export(output_path, format="mp3")
+            print(f"✅ 生成1分钟版本: {output_path} (原始: {duration_ms/1000:.1f}秒)")
+            return os.path.join(audio_dir + '_1min', audio_filename)
+        except Exception as e:
+            print(f"⚠️ 无法导出音频文件 {output_path}: {e}")
+            if not os.access(output_dir, os.W_OK):
+                print(f"   目录无写权限: {output_dir}")
+            return None
+        
+    except ImportError as e:
+        # 如果没有pydub，返回原文件路径
+        print(f"⚠️ pydub 未安装，无法生成缩短版本: {e}")
+        return audio_path
+    except Exception as e:
+        print(f"❌ 生成1分钟音频失败: {e}")
+        import traceback
+        traceback.print_exc()
+        # 失败时返回原文件路径，确保功能可用
+        return audio_path
+
+def generate_scale_audio_from_mp3(key, scale_type, octave, scale_notes, piano_samples_dir, convert_note_name):
+    """从MP3文件拼接生成完整的音阶音频（8个音符，每个0.5秒）
+    
+    Args:
+        key: 调性（如 'C'）
+        scale_type: 音阶类型（如 'major'）
+        octave: 起始八度（如 4）
+        scale_notes: 音阶音符列表（8个音符）
+        piano_samples_dir: 钢琴样本目录
+        convert_note_name: 音符名称转换函数
+    """
+    print(f"🔧 generate_scale_audio_from_mp3 开始执行")
+    print(f"   参数: key={key}, scale_type={scale_type}, octave={octave}")
+    print(f"   scale_notes: {scale_notes}")
+    print(f"   piano_samples_dir: {piano_samples_dir}")
+    
+    try:
+        from pydub import AudioSegment
+        print(f"✅ pydub 导入成功")
+        
+        # 构建输出文件名
+        safe_key = key.replace('#', 'sharp')
+        safe_scale = scale_type.replace('_', '-')
+        scale_dir = os.path.join(basedir, 'static', 'audio', 'scale')
+        
+        # 确保目录存在（移动端可能需要）
+        try:
+            os.makedirs(scale_dir, exist_ok=True)
+        except Exception as e:
+            print(f"⚠️ 无法创建目录 {scale_dir}: {e}")
+            return None
+        
+        output_filename = f"{safe_key}_{safe_scale}_oct{octave}_full.mp3"
+        output_path = os.path.join(scale_dir, output_filename)
+        
+        # 如果文件已存在，直接返回
+        if os.path.exists(output_path):
+            return f"scale/{output_filename}"
+        
+        # 拼接所有音符（每个0.5秒）
+        combined_audio = None
+        note_duration_ms = 500  # 0.5秒 = 500毫秒
+        
+        print(f"📝 开始拼接 {len(scale_notes)} 个音符")
+        
+        for idx, note in enumerate(scale_notes, 1):
+            note_openear = convert_note_name(note)
+            note_file = os.path.join(piano_samples_dir, f"{note_openear}.mp3")
+            
+            print(f"   [{idx}/{len(scale_notes)}] 处理音符: {note} -> {note_openear}")
+            print(f"      文件路径: {note_file}")
+            
+            if not os.path.exists(note_file):
+                print(f"⚠️ 音阶音符文件不存在: {note} -> {note_openear} -> {note_file}")
+                # 列出目录中的文件（调试用）
+                if os.path.exists(piano_samples_dir):
+                    files = os.listdir(piano_samples_dir)
+                    print(f"      目录中的文件数量: {len(files)}")
+                    similar_files = [f for f in files if note_openear.split('s')[0] in f]
+                    if similar_files:
+                        print(f"      相似文件: {similar_files[:5]}")
+                    else:
+                        print(f"      目录中的前5个文件: {files[:5]}")
+                import sys
+                sys.stderr.write(f"⚠️ 音阶音符文件不存在: {note_file}\n")
+                return None
+            
+            # 加载MP3文件
+            try:
+                print(f"      加载音频文件...")
+                audio_segment = AudioSegment.from_mp3(note_file)
+                print(f"      音频时长: {len(audio_segment)/1000:.2f}秒")
+            except Exception as e:
+                print(f"⚠️ 无法加载音频文件 {note_file}: {e}")
+                import sys
+                sys.stderr.write(f"⚠️ 无法加载音频文件 {note_file}: {e}\n")
+                import traceback
+                traceback.print_exc()
+                return None
+            
+            # 截取前0.5秒
+            audio_segment = audio_segment[:note_duration_ms]
+            
+            # 拼接
+            if combined_audio is None:
+                combined_audio = audio_segment
+                print(f"      初始化拼接音频")
+            else:
+                combined_audio = combined_audio + audio_segment
+                print(f"      拼接完成，当前总时长: {len(combined_audio)/1000:.2f}秒")
+        
+        if combined_audio is None:
+            print(f"❌ 拼接音频为空")
+            import sys
+            sys.stderr.write("❌ 拼接音频为空\n")
+            return None
+        
+        print(f"✅ 所有音符拼接完成，总时长: {len(combined_audio)/1000:.2f}秒")
+        print(f"📁 准备导出到: {output_path}")
+        
+        # 导出为MP3
+        try:
+            print(f"💾 开始导出MP3文件...")
+            combined_audio.export(output_path, format="mp3")
+            print(f"✅ 生成完整音阶音频: {output_path} (总时长: {len(combined_audio)/1000:.2f}秒)")
+            import sys
+            sys.stdout.write(f"✅ 生成完整音阶音频: {output_path}\n")
+        except Exception as e:
+            print(f"⚠️ 无法导出音频文件 {output_path}: {e}")
+            import sys
+            sys.stderr.write(f"⚠️ 无法导出音频文件 {output_path}: {e}\n")
+            import traceback
+            traceback.print_exc()
+            # 检查目录权限
+            if not os.access(scale_dir, os.W_OK):
+                print(f"   目录无写权限: {scale_dir}")
+                sys.stderr.write(f"   目录无写权限: {scale_dir}\n")
+            return None
+        
+        return f"scale/{output_filename}"
+        
+    except ImportError as e:
+        # 如果没有pydub，直接返回None
+        error_msg = f"⚠️ pydub 未安装: {e}"
+        print(error_msg)
+        import sys
+        sys.stderr.write(f"{error_msg}\n")
+        return None
+    except Exception as e:
+        error_msg = f"❌ 生成音阶音频失败: {e}"
+        print(error_msg)
+        import sys
+        sys.stderr.write(f"{error_msg}\n")
+        import traceback
+        traceback.print_exc()
+        return None
 
 def generate_scale_audio(root_note, scale_type, octave=4, octave_range=1):
     """生成音阶音频文件（一个八度，从根音到根音）
@@ -764,6 +1175,7 @@ def generate_question(exercise_type):
                     'option_values': options,
                     'correct_answer': interval_info['cn'],
                     'correct_value': correct_answer,
+                    'sub_item': correct_answer,  # 细分项：音程名称
                     'is_authenticated': current_user.is_authenticated if hasattr(current_user, 'is_authenticated') else False,
                 })
             except Exception as e:
@@ -868,7 +1280,6 @@ def generate_question(exercise_type):
             piano_samples_dir = os.path.join(basedir, 'static', 'audio', 'samples', 'piano')
             question_audio_file = f"samples/piano/{question_note_openear}.mp3"
             question_audio_path = os.path.join(piano_samples_dir, f"{question_note_openear}.mp3")
-            root_audio_file = f"samples/piano/{root_note_openear}.mp3"
             root_audio_path = os.path.join(piano_samples_dir, f"{root_note_openear}.mp3")
             
             if not os.path.exists(question_audio_path):
@@ -879,17 +1290,46 @@ def generate_question(exercise_type):
                 print(f"⚠️ 根音文件不存在: {key}{octave} -> {root_note_openear} -> {root_audio_path}")
                 return jsonify({'status': 'error', 'msg': f'根音文件不存在: {key}{octave} ({root_note_openear})'})
             
-            # 生成音阶音频（使用音源拼接）
-            # 构建音阶中的所有音符文件路径
-            scale_audio_files = []
-            for note in scale_notes:
-                note_openear = convert_note_name(note)
-                note_file = os.path.join(piano_samples_dir, f"{note_openear}.mp3")
-                if os.path.exists(note_file):
-                    scale_audio_files.append(f"samples/piano/{note_openear}.mp3")
+            # 生成4秒的根音音频文件
+            root_audio_file = generate_root_audio_4sec(key, octave, root_note_openear, piano_samples_dir)
+            if not root_audio_file:
+                # 如果无法生成缩短版本，回退到使用原始根音文件
+                print(f"⚠️ 无法生成缩短版根音音频，使用原始文件: {root_note_openear}.mp3")
+                # 使用原始根音文件路径
+                root_audio_file = f"samples/piano/{root_note_openear}.mp3"
+                # 验证原始文件是否存在
+                if not os.path.exists(root_audio_path):
+                    error_msg = f'根音文件不存在: {key}{octave} ({root_note_openear})'
+                    print(f"❌ {error_msg}")
+                    return jsonify({'status': 'error', 'msg': error_msg})
+                print(f"✅ 使用原始根音文件: {root_audio_file}")
             
-            if not scale_audio_files:
-                return jsonify({'status': 'error', 'msg': '无法构建音阶音频文件列表'})
+            # 生成音阶音频（直接拼接成完整音频文件）
+            # 构建一个八度的完整音阶（从根音到高八度根音，共8个音符）
+            first_octave_count = len(base_degrees)  # 通常是7个音符
+            
+            # 确保取第一个八度的所有音符
+            if octave_range == 1:
+                first_octave_notes = scale_notes[:first_octave_count]
+            else:
+                first_octave_notes = scale_notes[:first_octave_count]
+            
+            # 添加高八度根音
+            root_note_high = f"{key}{octave + 1}"
+            scale_notes_for_audio = first_octave_notes + [root_note_high]
+            
+            print(f"🎵 准备生成音阶音频:")
+            print(f"   调性: {key}, 音阶类型: {scale_type}, 八度: {octave}")
+            print(f"   音阶音符: {scale_notes_for_audio}")
+            print(f"   音符数量: {len(scale_notes_for_audio)}")
+            
+            # 生成完整的音阶音频文件（拼接8个音符，每个0.5秒）
+            scale_audio_file = generate_scale_audio_from_mp3(key, scale_type, octave, scale_notes_for_audio, piano_samples_dir, convert_note_name)
+            
+            # 如果生成失败，不阻止练习继续，只是不提供完整音阶音频
+            if not scale_audio_file:
+                print(f"⚠️ 音阶音频生成失败，但继续提供练习功能（仅提供根音和题目音频）")
+                # 不返回错误，让练习可以继续进行
             
             # 准备选项（音阶内的所有音级）
             options = degrees.copy()
@@ -901,14 +1341,25 @@ def generate_question(exercise_type):
             
             
             try:
+                # 确保 root_audio_file 不为空
+                if not root_audio_file:
+                    print(f"⚠️ 警告：root_audio_file 为空，使用默认值")
+                    root_audio_file = f"samples/piano/{root_note_openear}.mp3"
+                
+                print(f"✅ 返回音阶练习题目:")
+                print(f"   root_audio_file: {root_audio_file}")
+                print(f"   scale_audio_file: {scale_audio_file}")
+                print(f"   question_audio_file: {question_audio_file}")
+                
                 return jsonify({
                     'status': 'ok',
                     'audio_file': question_audio_file,  # 题目音频（单个音符）
                     'root_audio_file': root_audio_file,  # 根音音频
-                    'scale_audio_files': scale_audio_files,  # 音阶音频文件列表（用于前端拼接播放）
+                    'scale_audio_file': scale_audio_file,  # 完整音阶音频文件（已拼接好的8个音符）
                     'options': options,
                     'correct_answer': correct_degree,
                     'correct_value': correct_degree,
+                    'sub_item': correct_degree,  # 细分项：音级（如"1", "2", "b3"等）
                     'scale_name': scale_name,
                     'is_authenticated': current_user.is_authenticated if hasattr(current_user, 'is_authenticated') else False,
                 })
@@ -985,14 +1436,17 @@ def generate_question(exercise_type):
             if not chord_audio_files:
                 return jsonify({'status': 'error', 'msg': '无法构建和弦音频文件列表'})
             
-            # 生成根音音频文件路径（用于参考）
+            # 生成根音音频文件路径（用于参考）- 使用4秒版本
             root_note_openear = convert_note_name(root_note)
-            root_audio_file_path = os.path.join(piano_samples_dir, f"{root_note_openear}.mp3")
-            root_audio_file = None
-            if os.path.exists(root_audio_file_path):
-                root_audio_file = f"samples/piano/{root_note_openear}.mp3"
-            else:
-                print(f"⚠️ 根音文件不存在: {root_note} -> {root_note_openear} -> {root_audio_file_path}")
+            root_audio_file = generate_root_audio_4sec(key, octave, root_note_openear, piano_samples_dir)
+            if not root_audio_file:
+                # 如果无法生成4秒版本，回退到原始文件
+                root_audio_file_path = os.path.join(piano_samples_dir, f"{root_note_openear}.mp3")
+                if os.path.exists(root_audio_file_path):
+                    root_audio_file = f"samples/piano/{root_note_openear}.mp3"
+                    print(f"⚠️ 无法生成缩短版根音音频，使用原始文件: {root_note_openear}.mp3")
+                else:
+                    print(f"⚠️ 根音文件不存在: {root_note} -> {root_note_openear} -> {root_audio_file_path}")
             
             # 准备选项（从允许的和弦类型中选择）
             all_chord_types = list(CHORD_TYPES.keys())
@@ -1046,6 +1500,7 @@ def generate_question(exercise_type):
                     'option_values': options,  # 选项值（英文）
                     'correct_answer': CHORD_TYPES[chord_type]['cn'],  # 正确答案（中文）
                     'correct_value': chord_type,  # 正确答案值（英文）
+                    'sub_item': chord_type,  # 细分项：和弦类型（如"major", "minor"等）
                     'is_authenticated': current_user.is_authenticated if hasattr(current_user, 'is_authenticated') else False,
                 })
             except Exception as e:
@@ -1068,19 +1523,320 @@ def generate_question(exercise_type):
             'msg': f'服务器错误: {str(e)}'
         }), 500
 
+@app.route('/api/start_session', methods=['POST'])
+def start_session():
+    """开始练习会话"""
+    if not current_user.is_authenticated:
+        return jsonify({'status': 'error', 'msg': '请先登录'}), 401
+    
+    data = request.get_json()
+    exercise_type = data.get('exercise_type', '')
+    settings = data.get('settings', {})
+    
+    if not exercise_type:
+        return jsonify({'status': 'error', 'msg': '缺少练习类型'}), 400
+    
+    # 创建新的练习会话
+    session = PracticeSession(
+        user_id=current_user.id,
+        exercise_type=exercise_type,
+        settings=json.dumps(settings) if settings else None
+    )
+    db.session.add(session)
+    db.session.commit()
+    
+    return jsonify({
+        'status': 'ok',
+        'session_id': session.id
+    })
+
+@app.route('/api/end_session', methods=['POST'])
+def end_session():
+    """结束练习会话"""
+    if not current_user.is_authenticated:
+        return jsonify({'status': 'error', 'msg': '请先登录'}), 401
+    
+    data = request.get_json()
+    session_id = data.get('session_id')
+    duration = data.get('duration', 0)  # 秒
+    total_questions = data.get('total_questions', 0)
+    correct_answers = data.get('correct_answers', 0)
+    
+    if not session_id:
+        return jsonify({'status': 'error', 'msg': '缺少会话ID'}), 400
+    
+    # 更新会话信息
+    session = PracticeSession.query.filter_by(
+        id=session_id,
+        user_id=current_user.id
+    ).first()
+    
+    if not session:
+        return jsonify({'status': 'error', 'msg': '会话不存在'}), 404
+    
+    session.end_time = datetime.utcnow()
+    session.duration = duration
+    session.total_questions = total_questions
+    session.correct_answers = correct_answers
+    db.session.commit()
+    
+    return jsonify({'status': 'ok'})
+
+@app.route('/api/statistics', methods=['GET'])
+@login_required
+def get_statistics():
+    """获取用户统计数据"""
+    try:
+        # 1. 用户总练习时长和题目总数
+        all_sessions = PracticeSession.query.filter_by(user_id=current_user.id).all()
+        total_duration = sum((s.duration or 0) for s in all_sessions)  # 秒
+        total_questions = sum((s.total_questions or 0) for s in all_sessions)
+        
+        # 2. 各练习卡片的统计数据
+        exercise_stats = {}
+        for exercise_type in EXERCISE_TYPES.keys():
+            sessions = PracticeSession.query.filter_by(
+                user_id=current_user.id,
+                exercise_type=exercise_type
+            ).all()
+            
+            exercise_duration = sum((s.duration or 0) for s in sessions)
+            exercise_questions = sum((s.total_questions or 0) for s in sessions)
+            exercise_correct = sum((s.correct_answers or 0) for s in sessions)
+            exercise_accuracy = (exercise_correct / exercise_questions * 100) if exercise_questions > 0 else 0
+            
+            # 3. 各练习卡片里细分项的统计数据
+            sub_item_stats = {}
+            if exercise_type == 'interval':
+                # 查询该练习类型的所有题目
+                session_ids = [s.id for s in sessions]
+                if session_ids:
+                    questions = Question.query.filter(
+                        Question.session_id.in_(session_ids),
+                        Question.exercise_type == exercise_type
+                    ).all()
+                    
+                    # 按细分项统计
+                    for question in questions:
+                        sub_item = question.sub_item or ''
+                        if sub_item:
+                            if sub_item not in sub_item_stats:
+                                sub_item_stats[sub_item] = {
+                                    'duration': 0,
+                                    'total_questions': 0,
+                                    'correct_answers': 0
+                                }
+                            # 获取该题目的答案
+                            answer = UserAnswer.query.filter_by(
+                                question_id=question.id,
+                                user_id=current_user.id
+                            ).first()
+                            if answer:
+                                sub_item_stats[sub_item]['total_questions'] += 1
+                                if answer.is_correct:
+                                    sub_item_stats[sub_item]['correct_answers'] += 1
+                                # 使用响应时间累加作为时长估算
+                                if answer.response_time:
+                                    sub_item_stats[sub_item]['duration'] += int(answer.response_time)
+                    
+                    # 计算细分项的正确率
+                    for sub_item, stats in sub_item_stats.items():
+                        stats['accuracy'] = (stats['correct_answers'] / stats['total_questions'] * 100) if stats['total_questions'] > 0 else 0
+            elif exercise_type == 'scale_degree':
+                # 音阶练习的细分项是音级（如"1", "2", "b3"等）
+                session_ids = [s.id for s in sessions]
+                if session_ids:
+                    questions = Question.query.filter(
+                        Question.session_id.in_(session_ids),
+                        Question.exercise_type == exercise_type
+                    ).all()
+                    
+                    for question in questions:
+                        sub_item = question.sub_item or question.correct_answer or ''
+                        if sub_item:
+                            if sub_item not in sub_item_stats:
+                                sub_item_stats[sub_item] = {
+                                    'duration': 0,
+                                    'total_questions': 0,
+                                    'correct_answers': 0
+                                }
+                            answer = UserAnswer.query.filter_by(
+                                question_id=question.id,
+                                user_id=current_user.id
+                            ).first()
+                            if answer:
+                                sub_item_stats[sub_item]['total_questions'] += 1
+                                if answer.is_correct:
+                                    sub_item_stats[sub_item]['correct_answers'] += 1
+                                if answer.response_time:
+                                    sub_item_stats[sub_item]['duration'] += int(answer.response_time)
+                    
+                    for sub_item, stats in sub_item_stats.items():
+                        stats['accuracy'] = (stats['correct_answers'] / stats['total_questions'] * 100) if stats['total_questions'] > 0 else 0
+            elif exercise_type == 'chord_quality':
+                # 和弦练习的细分项是和弦类型（如"major", "minor"等）
+                session_ids = [s.id for s in sessions]
+                if session_ids:
+                    questions = Question.query.filter(
+                        Question.session_id.in_(session_ids),
+                        Question.exercise_type == exercise_type
+                    ).all()
+                    
+                    for question in questions:
+                        sub_item = question.sub_item or question.correct_answer or ''
+                        if sub_item:
+                            if sub_item not in sub_item_stats:
+                                sub_item_stats[sub_item] = {
+                                    'duration': 0,
+                                    'total_questions': 0,
+                                    'correct_answers': 0
+                                }
+                            answer = UserAnswer.query.filter_by(
+                                question_id=question.id,
+                                user_id=current_user.id
+                            ).first()
+                            if answer:
+                                sub_item_stats[sub_item]['total_questions'] += 1
+                                if answer.is_correct:
+                                    sub_item_stats[sub_item]['correct_answers'] += 1
+                                if answer.response_time:
+                                    sub_item_stats[sub_item]['duration'] += int(answer.response_time)
+                    
+                    for sub_item, stats in sub_item_stats.items():
+                        stats['accuracy'] = (stats['correct_answers'] / stats['total_questions'] * 100) if stats['total_questions'] > 0 else 0
+            
+            # 计算练习次数
+            practice_count = len(sessions)
+            
+            exercise_stats[exercise_type] = {
+                'duration': exercise_duration,
+                'total_questions': exercise_questions,
+                'accuracy': round(exercise_accuracy, 2),
+                'practice_count': practice_count,
+                'sub_items': sub_item_stats
+            }
+        
+        # 4. 用户每天活跃日期和时长
+        daily_stats = {}
+        for session in all_sessions:
+            if session.start_time:
+                date_key = session.start_time.date().isoformat()
+                if date_key not in daily_stats:
+                    daily_stats[date_key] = {
+                        'date': date_key,
+                        'duration': 0,
+                        'sessions': 0
+                    }
+                daily_stats[date_key]['duration'] += (session.duration or 0)
+                daily_stats[date_key]['sessions'] += 1
+        
+        # 转换为列表并按日期排序
+        daily_stats_list = sorted(daily_stats.values(), key=lambda x: x['date'], reverse=True)
+        
+        # 5. 计算总正确数和练习天数
+        total_correct = sum((s.correct_answers or 0) for s in all_sessions)
+        practice_days = len(set(s.start_time.date() for s in all_sessions if s.start_time))
+        
+        # 6. 按周/月/年分组的时长分布
+        weekly_stats = {}  # {year-week: duration}
+        monthly_stats = {}  # {year-month: duration}
+        yearly_stats = {}  # {year: duration}
+        
+        for session in all_sessions:
+            if session.start_time and session.duration:
+                dt = session.start_time
+                duration = session.duration or 0
+                
+                # 按周统计（ISO周）
+                year, week, _ = dt.isocalendar()
+                week_key = f"{year}-W{week:02d}"
+                if week_key not in weekly_stats:
+                    weekly_stats[week_key] = 0
+                weekly_stats[week_key] += duration
+                
+                # 按月统计
+                month_key = f"{dt.year}-{dt.month:02d}"
+                if month_key not in monthly_stats:
+                    monthly_stats[month_key] = 0
+                monthly_stats[month_key] += duration
+                
+                # 按年统计
+                year_key = str(dt.year)
+                if year_key not in yearly_stats:
+                    yearly_stats[year_key] = 0
+                yearly_stats[year_key] += duration
+        
+        # 转换为列表并排序
+        weekly_list = sorted([{'period': k, 'duration': v} for k, v in weekly_stats.items()], 
+                            key=lambda x: x['period'], reverse=True)
+        monthly_list = sorted([{'period': k, 'duration': v} for k, v in monthly_stats.items()], 
+                             key=lambda x: x['period'], reverse=True)
+        yearly_list = sorted([{'period': k, 'duration': v} for k, v in yearly_stats.items()], 
+                            key=lambda x: x['period'], reverse=True)
+        
+        return jsonify({
+            'status': 'ok',
+            'total_duration': total_duration,  # 秒
+            'total_questions': total_questions,
+            'total_correct': total_correct,
+            'practice_days': practice_days,
+            'exercise_stats': exercise_stats,
+            'daily_stats': daily_stats_list,
+            'weekly_stats': weekly_list,
+            'monthly_stats': monthly_list,
+            'yearly_stats': yearly_list
+        })
+    except Exception as e:
+        print(f"获取统计数据失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            'status': 'error',
+            'msg': f'获取统计数据失败: {str(e)}'
+        }), 500
+
 @app.route('/api/submit_answer', methods=['POST'])
 def submit_answer():
     """提交答案"""
     data = request.get_json()
     user_answer = data.get('answer', '')
     correct_value = data.get('correct_value', '')
+    session_id = data.get('session_id')
+    question_data = data.get('question_data', {})  # 题目完整数据
+    response_time = data.get('response_time', 0)  # 响应时间（秒）
+    sub_item = data.get('sub_item', '')  # 细分项，如"小二度"、"大二度"等
     
     is_correct = (user_answer == correct_value)
     
     # 如果用户已登录，保存到数据库
-    if current_user.is_authenticated:
-        # TODO: 实现数据库保存逻辑
-        pass
+    if current_user.is_authenticated and session_id:
+        try:
+            # 创建题目记录
+            question = Question(
+                session_id=session_id,
+                exercise_type=question_data.get('exercise_type', ''),
+                question_data=json.dumps(question_data),
+                correct_answer=correct_value,
+                sub_item=sub_item
+            )
+            db.session.add(question)
+            db.session.flush()  # 获取question.id
+            
+            # 创建用户答案记录
+            user_answer_record = UserAnswer(
+                user_id=current_user.id,
+                question_id=question.id,
+                user_answer=user_answer,
+                is_correct=is_correct,
+                response_time=response_time
+            )
+            db.session.add(user_answer_record)
+            db.session.commit()
+        except Exception as e:
+            print(f"保存答案失败: {e}")
+            import traceback
+            traceback.print_exc()
+            db.session.rollback()
     
     # 获取用户答案的中文名称
     user_answer_cn = user_answer
@@ -1089,7 +1845,11 @@ def submit_answer():
             user_answer_cn = interval['cn']
             break
     
+    # 获取正确答案的中文名称
     correct_answer_cn = next((interval['cn'] for interval in INTERVALS.values() if interval['name'] == correct_value), correct_value)
+    # 如果是音阶练习，直接使用correct_value
+    if not correct_answer_cn or correct_answer_cn == correct_value:
+        correct_answer_cn = correct_value
     
     return jsonify({
         'status': 'ok',
@@ -1143,6 +1903,62 @@ def logout():
     logout_user()
     flash('已登出')
     return redirect(url_for('index'))
+
+@app.route('/statistics')
+@login_required
+def statistics():
+    """统计页面"""
+    return render_template('statistics.html', 
+                         exercise_types=EXERCISE_TYPES,
+                         current_user=current_user)
+
+@app.route('/logs')
+@login_required
+def view_logs():
+    """查看服务器日志（需要登录）"""
+    try:
+        # 尝试读取日志文件
+        log_file = os.path.join(basedir, '..', 'logs', 'app.log')
+        if not os.path.exists(log_file):
+            # 尝试其他可能的日志位置
+            log_file = os.path.join(basedir, 'logs', 'app.log')
+            if not os.path.exists(log_file):
+                # 如果没有日志文件，返回最近的print输出
+                return render_template('logs.html', 
+                                     logs="暂无日志文件。日志会显示在服务器控制台。\n\n提示：如果使用 gunicorn，日志通常在 logs/app.log",
+                                     error="未找到日志文件")
+        
+        # 读取最后1000行日志
+        with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+            # 取最后1000行
+            recent_logs = ''.join(lines[-1000:]) if len(lines) > 1000 else ''.join(lines)
+        
+        return render_template('logs.html', logs=recent_logs, error=None)
+    except Exception as e:
+        return render_template('logs.html', 
+                             logs=f"读取日志时出错: {str(e)}", 
+                             error=str(e))
+
+@app.route('/api/logs/recent')
+@login_required
+def get_recent_logs():
+    """获取最近的日志（API，用于实时刷新）"""
+    try:
+        log_file = os.path.join(basedir, '..', 'logs', 'app.log')
+        if not os.path.exists(log_file):
+            log_file = os.path.join(basedir, 'logs', 'app.log')
+            if not os.path.exists(log_file):
+                return jsonify({'status': 'error', 'msg': '未找到日志文件'})
+        
+        # 读取最后200行
+        with open(log_file, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+            recent_logs = ''.join(lines[-200:]) if len(lines) > 200 else ''.join(lines)
+        
+        return jsonify({'status': 'ok', 'logs': recent_logs})
+    except Exception as e:
+        return jsonify({'status': 'error', 'msg': str(e)})
 
 if __name__ == '__main__':
     # 开发环境：允许局域网访问

@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}服务器日志 - openEar{% endblock %}
+
+{% block extra_css %}
+<style>
+    .logs-container {
+        max-width: 100%;
+        margin: 20px auto;
+        padding: 16px;
+        background: var(--bg-primary, #ffffff);
+    }
+    
+    .logs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .logs-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-refresh, .btn-clear {
+        padding: 8px 16px;
+        border: 1px solid var(--border, #e5e7eb);
+        border-radius: 6px;
+        background: var(--bg-secondary, #f9fafb);
+        color: var(--text-primary, #1f2937);
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+    }
+    
+    .btn-refresh:hover, .btn-clear:hover {
+        background: var(--hf-primary-light, #dbeafe);
+        border-color: var(--hf-primary, #3b82f6);
+    }
+    
+    .logs-content {
+        background: var(--bg-secondary, #1f2937);
+        color: var(--text-inverse, #f9fafb);
+        padding: 16px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', 'Space Mono', 'Courier New', monospace;
+        font-size: 12px;
+        line-height: 1.6;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-height: 70vh;
+        overflow-y: auto;
+    }
+    
+    .logs-content::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    
+    .logs-content::-webkit-scrollbar-track {
+        background: var(--bg-primary, #111827);
+    }
+    
+    .logs-content::-webkit-scrollbar-thumb {
+        background: var(--hf-primary, #3b82f6);
+        border-radius: 4px;
+    }
+    
+    .error-message {
+        padding: 12px;
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        color: #991b1b;
+        margin-bottom: 16px;
+    }
+    
+    .info-message {
+        padding: 12px;
+        background: #dbeafe;
+        border: 1px solid #93c5fd;
+        border-radius: 6px;
+        color: #1e40af;
+        margin-bottom: 16px;
+        font-size: 13px;
+    }
+    
+    @media (max-width: 768px) {
+        .logs-container {
+            padding: 12px;
+        }
+        
+        .logs-content {
+            font-size: 11px;
+            padding: 12px;
+            max-height: 60vh;
+        }
+        
+        .logs-header h1 {
+            font-size: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="logs-container">
+    <div class="logs-header">
+        <h1 style="margin: 0; font-size: 24px;">📋 服务器日志</h1>
+        <div class="logs-actions">
+            <button class="btn-refresh" onclick="refreshLogs()">🔄 刷新</button>
+            <button class="btn-clear" onclick="clearLogs()">🗑️ 清空显示</button>
+        </div>
+    </div>
+    
+    {% if error %}
+    <div class="error-message">
+        ⚠️ {{ error }}
+    </div>
+    {% endif %}
+    
+    <div class="info-message">
+        💡 提示：这里显示的是服务器日志的最后1000行。如果需要查看完整日志，请通过SSH连接到服务器。
+        <br>日志文件位置：<code>logs/app.log</code> 或服务器控制台输出
+    </div>
+    
+    <div class="logs-content" id="logsContent">{{ logs }}</div>
+</div>
+
+<script>
+function refreshLogs() {
+    const content = document.getElementById('logsContent');
+    content.textContent = '正在刷新...';
+    
+    fetch('/api/logs/recent')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok') {
+                content.textContent = data.logs || '暂无日志';
+                // 滚动到底部
+                content.scrollTop = content.scrollHeight;
+            } else {
+                content.textContent = '刷新失败: ' + (data.msg || '未知错误');
+            }
+        })
+        .catch(error => {
+            content.textContent = '刷新失败: ' + error.message;
+        });
+}
+
+function clearLogs() {
+    if (confirm('确定要清空显示的日志吗？（不会删除服务器上的日志文件）')) {
+        document.getElementById('logsContent').textContent = '日志已清空（刷新可重新加载）';
+    }
+}
+
+// 页面加载时滚动到底部
+document.addEventListener('DOMContentLoaded', function() {
+    const content = document.getElementById('logsContent');
+    content.scrollTop = content.scrollHeight;
+});
+
+// 自动刷新（可选，每30秒）
+// setInterval(refreshLogs, 30000);
+</script>
+{% endblock %}
+

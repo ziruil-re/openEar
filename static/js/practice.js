@@ -10,7 +10,110 @@ document.addEventListener('DOMContentLoaded', function() {
             sidebar.classList.toggle('collapsed');
         });
     }
+    
+    // 侧边栏拖拽调整宽度功能
+    const sidebarResizer = document.getElementById('sidebar-resizer');
+    if (sidebarResizer && sidebar) {
+        let isResizing = false;
+        let startX = 0;
+        let startWidth = 0;
+        
+        // 从localStorage恢复宽度
+        const savedWidth = localStorage.getItem('sidebar-width');
+        if (savedWidth) {
+            sidebar.style.width = savedWidth + 'px';
+        }
+        
+        sidebarResizer.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            startX = e.clientX;
+            startWidth = sidebar.offsetWidth;
+            sidebarResizer.classList.add('dragging');
+            document.body.style.cursor = 'ew-resize';
+            document.body.style.userSelect = 'none';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+            
+            const diff = startX - e.clientX; // 因为是左侧调整，所以用减法
+            const newWidth = startWidth + diff;
+            const minWidth = 280;
+            const maxWidth = 700;
+            
+            if (newWidth >= minWidth && newWidth <= maxWidth) {
+                sidebar.style.width = newWidth + 'px';
+                // 保存到localStorage
+                localStorage.setItem('sidebar-width', newWidth);
+            }
+        });
+        
+        document.addEventListener('mouseup', function() {
+            if (isResizing) {
+                isResizing = false;
+                sidebarResizer.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            }
+        });
+    }
 });
+
+// 修复AI秘籍下拉框宽度
+function fixAISelectWidth() {
+    const explanationTab = document.getElementById('explanation-tab');
+    if (!explanationTab || !explanationTab.classList.contains('active')) {
+        return; // tab没有显示，不处理
+    }
+    
+    const scaleSelect = document.getElementById('scale-select-ai');
+    const intervalSelect = document.getElementById('interval-select-ai');
+    const chordSelect = document.getElementById('chord-select-ai');
+    const select = scaleSelect || intervalSelect || chordSelect;
+    
+    if (!select) {
+        return;
+    }
+    
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarContent = document.querySelector('.sidebar-content');
+    
+    if (!sidebar || !sidebarContent) {
+        return;
+    }
+    
+    // 获取sidebar的实际宽度
+    const sidebarWidth = sidebar.offsetWidth;
+    const sidebarContentPadding = 
+        (parseInt(window.getComputedStyle(sidebarContent).paddingLeft) || 0) + 
+        (parseInt(window.getComputedStyle(sidebarContent).paddingRight) || 0);
+    
+    const expectedWidth = sidebarWidth - sidebarContentPadding;
+    
+    // 如果宽度为0或不足，强制修复
+    if (select.offsetWidth === 0 || select.offsetWidth < expectedWidth - 10) {
+        // 强制设置所有相关元素的宽度
+        const parent = select.parentElement;
+        if (parent && parent.classList.contains('ai-secret-select-group')) {
+            parent.style.setProperty('width', '100%', 'important');
+            parent.style.setProperty('max-width', '100%', 'important');
+            parent.style.setProperty('box-sizing', 'border-box', 'important');
+        }
+        
+        // 设置下拉框宽度
+        if (expectedWidth > 0) {
+            select.style.setProperty('width', expectedWidth + 'px', 'important');
+            select.style.setProperty('max-width', expectedWidth + 'px', 'important');
+        } else {
+            select.style.setProperty('width', '100%', 'important');
+            select.style.setProperty('max-width', '100%', 'important');
+        }
+        select.style.setProperty('min-width', '0', 'important');
+        select.style.setProperty('box-sizing', 'border-box', 'important');
+        select.style.setProperty('display', 'block', 'important');
+    }
+}
 
 // 标签页切换
 document.querySelectorAll('.sidebar-tab').forEach(tab => {
@@ -26,7 +129,22 @@ document.querySelectorAll('.sidebar-tab').forEach(tab => {
             content.classList.remove('active');
         });
         document.getElementById(`${tabName}-tab`).classList.add('active');
+        
+        // 如果切换到AI秘籍tab，修复下拉框宽度
+        if (tabName === 'explanation') {
+            setTimeout(fixAISelectWidth, 100);
+        }
     });
+});
+
+// 页面加载完成后修复
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(fixAISelectWidth, 200);
+});
+
+// 监听窗口大小变化
+window.addEventListener('resize', () => {
+    setTimeout(fixAISelectWidth, 100);
 });
 
 // 全选音程
@@ -35,6 +153,30 @@ if (selectAllIntervals) {
     selectAllIntervals.addEventListener('change', (e) => {
         document.querySelectorAll('input[name="intervals"]').forEach(cb => {
             if (cb.id !== 'select-all-intervals') {
+                cb.checked = e.target.checked;
+            }
+        });
+    });
+}
+
+// 全选和弦类型
+const selectAllChords = document.getElementById('select-all-chords');
+if (selectAllChords) {
+    selectAllChords.addEventListener('change', (e) => {
+        document.querySelectorAll('input[name="chord_types"]').forEach(cb => {
+            if (cb.id !== 'select-all-chords') {
+                cb.checked = e.target.checked;
+            }
+        });
+    });
+}
+
+// 全选罗马数字
+const selectAllRoman = document.getElementById('select-all-roman');
+if (selectAllRoman) {
+    selectAllRoman.addEventListener('change', (e) => {
+        document.querySelectorAll('input[name="roman_numerals"]').forEach(cb => {
+            if (cb.id !== 'select-all-roman') {
                 cb.checked = e.target.checked;
             }
         });
@@ -52,6 +194,12 @@ function applySettings() {
         total_questions: formData.get('total_questions')
     };
     
+    // 更新总题目数
+    totalQuestions = parseInt(settings.total_questions) || 20;
+    // 重置统计
+    currentScore = 0;
+    currentTotal = 0;
+    
     if (exerciseType === 'interval') {
         settings.intervals = formData.getAll('intervals');
         settings.directions = formData.getAll('directions');
@@ -60,16 +208,91 @@ function applySettings() {
         settings.key = formData.get('key');
         settings.octave = formData.get('octave');
         settings.octave_range = formData.get('octave_range');
+    } else if (exerciseType === 'chord_quality') {
+        settings.key = formData.get('key');
+        settings.chord_types = formData.getAll('chord_types');
+        settings.roman_numerals = formData.getAll('roman_numerals');
     }
     
     // 保存到sessionStorage
     sessionStorage.setItem('practice_settings', JSON.stringify(settings));
     window.currentSettings = settings;
     
+    // 结束当前会话（如果存在）
+    if (currentSessionId) {
+        endCurrentSession();
+    }
+    
+    // 开始新会话
+    startNewSession();
+    
     // 重新加载题目
     loadQuestion();
     
     alert('设置已应用！');
+}
+
+// 开始新会话
+function startNewSession() {
+    // 检查用户是否已登录（通过检查导航栏中是否有用户名）
+    const navUser = document.querySelector('.nav-user');
+    const isAuthenticated = navUser !== null;
+    
+    if (!isAuthenticated) {
+        return; // 未登录用户不记录会话
+    }
+    
+    const exerciseType = window.location.pathname.split('/').pop();
+    const settings = JSON.parse(sessionStorage.getItem('practice_settings') || '{}');
+    
+    fetch('/api/start_session', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            exercise_type: exerciseType,
+            settings: settings
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'ok') {
+            currentSessionId = data.session_id;
+            sessionStartTime = Date.now();
+        }
+    })
+    .catch(error => {
+        console.error('开始会话失败:', error);
+    });
+}
+
+// 结束当前会话
+function endCurrentSession() {
+    if (!currentSessionId) {
+        return;
+    }
+    
+    const duration = sessionStartTime ? Math.floor((Date.now() - sessionStartTime) / 1000) : 0;
+    
+    fetch('/api/end_session', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            session_id: currentSessionId,
+            duration: duration,
+            total_questions: currentTotal,
+            correct_answers: currentScore
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'ok') {
+            currentSessionId = null;
+            sessionStartTime = null;
+        }
+    })
+    .catch(error => {
+        console.error('结束会话失败:', error);
+    });
 }
 
 // 加载题目
@@ -114,6 +337,18 @@ function loadQuestion() {
         if (settings.octave_range) {
             params.append('octave_range', settings.octave_range);
         }
+    } else if (exerciseType === 'chord_quality') {
+        if (settings.key) {
+            params.append('key', settings.key);
+        }
+        if (settings.chord_types && settings.chord_types.length > 0) {
+            params.append('chord_types', settings.chord_types.join(','));
+        }
+        // 确保roman_numerals有值，如果没有则使用默认值['I']
+        const romanNumerals = settings.roman_numerals && settings.roman_numerals.length > 0 
+            ? settings.roman_numerals 
+            : ['I'];
+        params.append('roman_numerals', romanNumerals.join(','));
     }
     
     // 调用API获取题目
@@ -135,6 +370,13 @@ function loadQuestion() {
 // 显示题目
 function displayQuestion(data) {
     window.currentQuestion = data;
+    // 确保scale_audio_file被存储（用于音阶练习）
+    if (data.scale_audio_file) {
+        window.currentQuestion.scale_audio_file = data.scale_audio_file;
+        console.log(`📊 完整音阶音频文件: ${data.scale_audio_file}`);
+    }
+    // 记录题目开始时间
+    questionStartTime = Date.now();
     const questionArea = document.getElementById('question-area');
     const answersLayout = document.getElementById('answers-layout');
     const exerciseType = window.exerciseType;
@@ -142,25 +384,50 @@ function displayQuestion(data) {
     let questionHtml = '';
     let answersHtml = '';
     
+    // 获取进度文本
+    const progressText = getProgressText();
+    
     if (exerciseType === 'interval') {
+        // 显示音符信息：C5-?（初始不显示答案）
+        const note1 = data.note1 || '';
+        const note2Display = '?'; // 初始总是显示?
+        const noteDisplay = note1 ? `${note1}-${note2Display}` : '';
+        
         questionHtml = `
             <div class="audio-player-container">
-                <h3>🎧 请听音程，选择正确的音程名称：</h3>
-                <audio id="audioPlayer" controls preload="auto">
-                    <source src="/static/audio/${data.audio_file}" type="audio/wav">
-                    您的浏览器不支持音频播放。
-                </audio>
-                <br>
-                <button class="play-audio-btn" onclick="playAudio()">
-                    <span>▶️</span> 播放音频
-                </button>
+                <h3 style="font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600; color: #000000; margin-bottom: 8px; text-align: left;">🎧 请听音程，选择正确的音程名称： ${progressText}</h3>
+                ${noteDisplay ? `
+                <p style="font-size: 13px; color: #606060; margin-bottom: 8px; font-family: 'JetBrains Mono', 'Space Mono', monospace; text-align: left;">
+                    现在播放的音符是：<strong style="color: #000000;" id="interval-note-display">${noteDisplay}</strong>
+                </p>
+                ` : ''}
+                <div id="interval-audio-container">
+                    ${data.audio_files ? `
+                    <button class="play-audio-btn" onclick="playIntervalAudio()" id="play-interval-btn">
+                        <span>▶️</span> 播放音程
+                    </button>
+                    ` : `
+                    <audio id="audioPlayer" controls preload="metadata">
+                        <source src="/static/audio/${data.audio_file}" type="audio/wav">
+                        您的浏览器不支持音频播放。
+                    </audio>
+                    <br>
+                    <button class="play-audio-btn" onclick="playAudio()">
+                        <span>▶️</span> 播放音频
+                    </button>
+                    `}
+                </div>
             </div>
         `;
+        
+        // 存储音符信息用于显示正确答案
+        window.intervalNote1 = note1;
+        window.intervalNote2 = data.note2;
         answersHtml = `
             <div class="answers-layout-rows-container">
                 <div class="answers-layout-row">
                     ${data.options.map((option, index) => `
-                        <button class="answer-button" onclick="selectAnswer('${data.option_values[index]}')">
+                        <button class="answer-button" data-value="${data.option_values[index]}" onclick="selectAnswer('${data.option_values[index]}')">
                             ${option}
                         </button>
                     `).join('')}
@@ -170,11 +437,11 @@ function displayQuestion(data) {
     } else if (exerciseType === 'scale_degree') {
         questionHtml = `
             <div class="audio-player-container">
-                <h3 style="font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600; color: #000000; margin-bottom: 12px;">🎧 请听音符，选择它在音阶中的音级：</h3>
-                <p style="font-size: 13px; color: #606060; margin-bottom: 12px; font-family: 'JetBrains Mono', 'Space Mono', monospace;">
+                <h3 style="font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600; color: #000000; margin-bottom: 8px; text-align: left;">🎧 请听音符，选择它在音阶中的音级： ${progressText}</h3>
+                <p style="font-size: 13px; color: #606060; margin-bottom: 8px; font-family: 'JetBrains Mono', 'Space Mono', monospace; text-align: left;">
                     当前音阶：<strong style="color: #000000;">${data.scale_name || ''}</strong>
                 </p>
-                <audio id="audioPlayer" controls preload="auto">
+                <audio id="audioPlayer" controls preload="metadata">
                     <source src="/static/audio/${data.audio_file}" type="audio/wav">
                     您的浏览器不支持音频播放。
                 </audio>
@@ -183,20 +450,31 @@ function displayQuestion(data) {
                     <span>▶️</span> 播放题目音频
                 </button>
             </div>
-            <div class="reference-audio-container">
-                <h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #000000; font-family: 'JetBrains Mono', 'Space Mono', monospace;">参考音频：</h4>
-                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+            <div class="reference-audio-container" style="margin-top: 12px;">
+                <h4 style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: #000000; font-family: 'JetBrains Mono', 'Space Mono', monospace;">参考音频：</h4>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    ${data.root_audio_file ? `
                     <div style="flex: 1; min-width: 200px;">
-                        <label style="font-size: 12px; color: #606060; margin-bottom: 6px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">根音：</label>
-                        <audio controls preload="auto" style="width: 100%;">
-                            <source src="/static/audio/${data.root_audio_file}" type="audio/wav">
+                        <label style="font-size: 11px; color: #606060; margin-bottom: 4px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">根音：</label>
+                        <audio controls preload="metadata" style="width: 100%;" onerror="console.error('根音音频加载失败:', this.src)">
+                            <source src="/static/audio/${data.root_audio_file}" type="audio/mpeg">
+                            您的浏览器不支持音频播放。
                         </audio>
                     </div>
+                    ` : `
                     <div style="flex: 1; min-width: 200px;">
-                        <label style="font-size: 12px; color: #606060; margin-bottom: 6px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">完整音阶：</label>
-                        <audio controls preload="auto" style="width: 100%;">
-                            <source src="/static/audio/${data.scale_audio_file}" type="audio/wav">
+                        <label style="font-size: 11px; color: #606060; margin-bottom: 4px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">根音：</label>
+                        <p style="font-size: 11px; color: #dc2626; padding: 8px; background: #fee2e2; border-radius: 4px;">⚠️ 根音音频未加载</p>
+                    </div>
+                    `}
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="font-size: 11px; color: #606060; margin-bottom: 4px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">完整音阶：</label>
+                        ${data.scale_audio_file ? `
+                        <audio id="scaleAudioPlayer" controls preload="metadata" style="width: 100%;" onerror="console.error('音阶音频加载失败:', this.src)">
+                            <source src="/static/audio/${data.scale_audio_file}" type="audio/mpeg">
+                            您的浏览器不支持音频播放。
                         </audio>
+                        ` : '<p style="font-size: 11px; color: #dc2626; padding: 8px; background: #fee2e2; border-radius: 4px;">⚠️ 音阶音频未加载</p>'}
                     </div>
                 </div>
             </div>
@@ -205,16 +483,77 @@ function displayQuestion(data) {
             <div class="answers-layout-rows-container">
                 <div class="answers-layout-row">
                     ${data.options.map((option) => `
-                        <button class="answer-button" onclick="selectAnswer('${option}')">
+                        <button class="answer-button" data-value="${option}" onclick="selectAnswer('${option}')">
                             ${option}
                         </button>
                     `).join('')}
                 </div>
             </div>
         `;
+    } else if (exerciseType === 'chord_quality') {
+        // 初始显示根音和问号，选完答案后再显示正确的和弦音符
+        const rootNote = data.root_note || '';
+        const chordNotes = data.chord_notes || [];
+        // 计算需要显示的问号数量（除了根音外的其他音符）
+        let initialNoteDisplay = '?';
+        if (rootNote && chordNotes.length > 1) {
+            // 有根音且和弦有多个音符，显示"根音-？-？"
+            const questionMarks = Array(chordNotes.length - 1).fill('?').join('-');
+            initialNoteDisplay = `${rootNote}-${questionMarks}`;
+        } else if (rootNote) {
+            // 只有根音，直接显示根音
+            initialNoteDisplay = rootNote;
+        } else if (chordNotes.length > 0) {
+            // 没有根音但有和弦音符，显示问号
+            const questionMarks = Array(chordNotes.length).fill('?').join('-');
+            initialNoteDisplay = questionMarks;
+        }
+        
+        questionHtml = `
+            <div class="audio-player-container">
+                <h3 style="font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600; color: #000000; margin-bottom: 8px; text-align: left;">🎧 请听和弦，选择正确的和弦类型： ${progressText}</h3>
+                <p style="font-size: 13px; color: #606060; margin-bottom: 8px; font-family: 'JetBrains Mono', 'Space Mono', monospace; text-align: left;">
+                    调性：<strong style="color: #000000;">${data.key || ''}</strong> | 
+                    和弦级数：<strong style="color: #000000;">${data.roman_numeral || ''}</strong>
+                </p>
+                <div id="chord-audio-container">
+                    <p style="font-size: 12px; color: #606060; margin-bottom: 8px; font-family: 'JetBrains Mono', 'Space Mono', monospace;">
+                        和弦音符：<strong style="color: #000000;" id="chord-notes-display">${initialNoteDisplay}</strong>
+                    </p>
+                    <button class="play-audio-btn" onclick="playChordAudio()">
+                        <span>▶️</span> 播放和弦
+                    </button>
+                </div>
+                ${data.root_audio_file ? `
+                <div style="margin-top: 12px;">
+                    <label style="font-size: 12px; color: #606060; margin-bottom: 6px; display: block; font-family: 'JetBrains Mono', 'Space Mono', monospace; font-weight: 600;">参考根音：</label>
+                    <audio controls preload="metadata" style="width: 100%;">
+                        <source src="/static/audio/${data.root_audio_file}" type="audio/mpeg">
+                    </audio>
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        // 存储和弦音符信息用于显示正确答案
+        window.chordNotes = chordNotes;
+        answersHtml = `
+            <div class="answers-layout-rows-container">
+                <div class="answers-layout-row">
+                    ${data.options.map((option, index) => `
+                        <button class="answer-button" data-value="${data.option_values[index]}" onclick="selectAnswer('${data.option_values[index]}')">
+                            ${option}
+                        </button>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        
+        // 存储和弦音频文件列表
+        window.chordAudioFiles = data.chord_audio_files || [];
     }
     
-    questionArea.innerHTML = questionHtml + '<div id="result-message" class="result-message" style="display: none;"></div>';
+    questionArea.innerHTML = questionHtml;
     
     // 将答案按钮插入到answers-layout中（操作按钮之前）
     if (answersLayout) {
@@ -237,11 +576,19 @@ function displayQuestion(data) {
         }
     }
     
-    // 重置按钮状态
+    // 重置按钮状态和颜色
     const btnRepeat = document.getElementById('btn-repeat');
     const btnNext = document.getElementById('btn-next');
     if (btnRepeat) btnRepeat.disabled = false;
     if (btnNext) btnNext.disabled = true;
+    
+    // 重置所有答案按钮的颜色
+    document.querySelectorAll('.answer-button, .option-btn').forEach(btn => {
+        btn.style.backgroundColor = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        btn.disabled = false;
+    });
 }
 
 // 选择答案
@@ -250,10 +597,25 @@ function selectAnswer(answer) {
     
     window.selectedAnswer = answer;
     
-    // 禁用所有选项
+    // 禁用所有选项（但先不改变颜色，等showResult再改）
     document.querySelectorAll('.answer-button, .option-btn').forEach(btn => {
         btn.disabled = true;
     });
+    
+    // 计算响应时间
+    const responseTime = questionStartTime ? (Date.now() - questionStartTime) / 1000 : 0;
+    
+    // 准备题目数据
+    const questionData = {
+        exercise_type: window.exerciseType,
+        note1: window.currentQuestion.note1,
+        note2: window.currentQuestion.note2,
+        audio_files: window.currentQuestion.audio_files,
+        scale_name: window.currentQuestion.scale_name,
+        key: window.currentQuestion.key,
+        roman_numeral: window.currentQuestion.roman_numeral,
+        root_note: window.currentQuestion.root_note
+    };
     
     // 提交答案到后端
     fetch('/api/submit_answer', {
@@ -261,7 +623,11 @@ function selectAnswer(answer) {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
             answer: answer,
-            correct_value: window.currentQuestion.correct_value
+            correct_value: window.currentQuestion.correct_value,
+            session_id: currentSessionId,
+            question_data: questionData,
+            response_time: responseTime,
+            sub_item: window.currentQuestion.sub_item || ''
         })
     })
     .then(response => response.json())
@@ -279,6 +645,28 @@ function selectAnswer(answer) {
 // 更新统计
 let currentScore = 0;
 let currentTotal = 0;
+let totalQuestions = 20; // 默认题目数量
+let currentSessionId = null; // 当前会话ID
+let sessionStartTime = null; // 会话开始时间
+let questionStartTime = null; // 题目开始时间
+
+// 获取进度和准确率文本
+function getProgressText() {
+    const accuracy = currentTotal > 0 ? Math.round((currentScore / currentTotal) * 100) : 0;
+    return `${currentTotal}/${totalQuestions} (${accuracy}%)`;
+}
+
+// 更新题目标题中的进度信息
+function updateQuestionTitle() {
+    const progressText = getProgressText();
+    const questionTitle = document.querySelector('.audio-player-container h3');
+    if (questionTitle) {
+        // 移除旧的进度信息（如果存在）
+        let titleText = questionTitle.textContent.replace(/\s+\d+\/\d+\s*\(\d+%\)/, '');
+        // 添加新的进度信息
+        questionTitle.textContent = titleText + ' ' + progressText;
+    }
+}
 
 function updateStats(isCorrect) {
     currentTotal++;
@@ -286,55 +674,53 @@ function updateStats(isCorrect) {
         currentScore++;
     }
     
-    document.getElementById('score').textContent = currentScore;
-    document.getElementById('progress').textContent = `${currentTotal}/20`;
-    const accuracy = currentTotal > 0 ? Math.round((currentScore / currentTotal) * 100) : 0;
-    document.getElementById('accuracy').textContent = `${accuracy}%`;
+    updateQuestionTitle();
 }
 
 // 显示结果
 function showResult(data) {
-    const resultDiv = document.getElementById('result-message');
-    if (!resultDiv) return;
-    
-    resultDiv.style.display = 'block';
-    resultDiv.className = `result-message ${data.is_correct ? 'correct' : 'incorrect'}`;
-    
-    // 显示结果
-    if (data.is_correct) {
-        resultDiv.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-                <span style="font-size: 32px;">✅</span>
-                <div>
-                    <div style="font-size: 18px; font-weight: 700; color: #166534;">正确！</div>
-                </div>
-            </div>
-        `;
-    } else {
-        resultDiv.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
-                <span style="font-size: 32px;">❌</span>
-                <div>
-                    <div style="font-size: 18px; font-weight: 700; color: #991b1b;">错误！</div>
-                    <div style="font-size: 13px; opacity: 0.9; margin-top: 2px;">正确答案：<strong>${data.correct_answer}</strong></div>
-                </div>
-            </div>
-        `;
+    // 如果是音程练习，更新音符显示（将?替换为正确的note2）
+    if (window.exerciseType === 'interval' && window.intervalNote2) {
+        const noteDisplay = document.getElementById('interval-note-display');
+        if (noteDisplay) {
+            const note1 = window.intervalNote1 || '';
+            noteDisplay.textContent = `${note1}-${window.intervalNote2}`;
+        }
     }
     
-    // 标记正确答案和错误答案
+    // 如果是和弦练习，更新和弦音符显示（将?替换为正确的音符）
+    if (window.exerciseType === 'chord_quality' && window.chordNotes && window.chordNotes.length > 0) {
+        const chordNotesDisplay = document.getElementById('chord-notes-display');
+        if (chordNotesDisplay) {
+            // 使用 - 连接，与初始显示格式一致
+            chordNotesDisplay.textContent = window.chordNotes.join('-');
+        }
+    }
+    
+    // 标记正确答案和错误答案（使用颜色）
     const selectedAnswer = window.selectedAnswer || '';
+    const correctValue = data.correct_value || data.correct_answer;
+    
     document.querySelectorAll('.answer-button, .option-btn').forEach(btn => {
         btn.disabled = true;
         const btnText = btn.textContent.trim();
-        if (data.is_correct && btnText === data.correct_answer) {
-            btn.classList.add('--right');
-        } else if (!data.is_correct) {
-            if (btnText === data.correct_answer) {
-                btn.classList.add('--right');
-            } else if (btnText === selectedAnswer) {
-                btn.classList.add('--wrong');
-            }
+        const btnValue = btn.getAttribute('data-value') || btnText;
+        
+        // 检查是否是正确答案（匹配文本或值）
+        const isCorrectAnswer = btnText === data.correct_answer || btnValue === correctValue || btnValue === data.correct_answer;
+        // 检查是否是用户选择的答案
+        const isUserAnswer = btnText === selectedAnswer || btnValue === selectedAnswer;
+        
+        if (isCorrectAnswer) {
+            // 正确答案：绿色
+            btn.style.backgroundColor = '#10b981';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = '#10b981';
+        } else if (isUserAnswer && !data.is_correct) {
+            // 用户选择的错误答案：红色
+            btn.style.backgroundColor = '#ef4444';
+            btn.style.color = '#ffffff';
+            btn.style.borderColor = '#ef4444';
         }
     });
     
@@ -349,10 +735,208 @@ function showResult(data) {
 function playAudio() {
     const audioPlayer = document.getElementById('audioPlayer');
     if (audioPlayer) {
-        audioPlayer.play().catch(e => {
-            console.error('播放失败:', e);
+        // 移动端需要先加载音频
+        if (audioPlayer.readyState === 0) {
+            audioPlayer.load();
+        }
+        
+        // 等待音频可以播放
+        const playPromise = audioPlayer.play();
+        if (playPromise !== undefined) {
+            playPromise.catch(e => {
+                console.error('播放失败:', e);
+                // 移动端可能需要用户交互，尝试重新加载
+                if (e.name === 'NotAllowedError' || e.name === 'NotSupportedError') {
+                    audioPlayer.load();
+                }
+            });
+        }
+    }
+}
+
+// 播放完整音阶音频（已拼接好的8个音符，每个0.5秒，总共4秒）
+
+// 播放音程音频（使用两个音符文件，每个0.5秒）
+function playIntervalAudio() {
+    if (!window.currentQuestion || !window.currentQuestion.audio_files) {
+        console.error('没有音程音频文件');
+        return;
+    }
+    
+    const audioFiles = window.currentQuestion.audio_files;
+    const note1File = audioFiles.note1;
+    const note2File = audioFiles.note2;
+    const direction = audioFiles.direction || 'up';
+    
+    // 更新按钮状态
+    const playBtn = document.getElementById('play-interval-btn');
+    const originalBtnText = playBtn ? playBtn.innerHTML : '';
+    
+    if (playBtn) {
+        playBtn.disabled = true;
+        playBtn.innerHTML = '<span>⏳</span> 加载中...';
+    }
+    
+    // 停止之前播放的音频
+    if (window.intervalAudioContexts) {
+        window.intervalAudioContexts.forEach(ctx => {
+            if (ctx.audio) {
+                ctx.audio.pause();
+                ctx.audio.currentTime = 0;
+            }
         });
     }
+    
+    window.intervalAudioContexts = [];
+    
+    // 检测移动端
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // 先播放第一个音符（0.5秒）
+    const audio1 = new Audio(`/static/audio/${note1File}`);
+    
+    // 移动端使用 metadata 预加载
+    if (isMobile) {
+        audio1.preload = 'metadata';
+    } else {
+        audio1.preload = 'auto';
+    }
+    
+    let audio1Ready = false;
+    
+    const handleAudio1Ready = () => {
+        if (audio1Ready) return;
+        audio1Ready = true;
+        
+        // 设置播放时长为0.5秒
+        audio1.addEventListener('timeupdate', () => {
+            if (audio1.currentTime >= 0.5) {
+                audio1.pause();
+                audio1.currentTime = 0;
+            }
+        });
+        
+        // 播放第一个音符
+        const playPromise = audio1.play();
+        if (playPromise !== undefined) {
+            playPromise.then(() => {
+                if (playBtn) {
+                    playBtn.innerHTML = originalBtnText || '<span>▶️</span> 播放音程';
+                    playBtn.disabled = false;
+                }
+            }).catch(e => {
+                console.error('播放第一个音符失败:', e);
+                if (playBtn) {
+                    playBtn.innerHTML = originalBtnText || '<span>▶️</span> 播放音程';
+                    playBtn.disabled = false;
+                }
+                // 移动端可能需要用户交互，提示用户
+                if (isMobile && (e.name === 'NotAllowedError' || e.name === 'NotSupportedError')) {
+                    console.warn('移动端音频播放需要用户交互');
+                }
+            });
+        }
+    };
+    
+    // 监听加载完成
+    if (audio1.readyState >= 2) {
+        // 已经加载了元数据
+        handleAudio1Ready();
+    } else {
+        audio1.addEventListener('loadedmetadata', handleAudio1Ready, { once: true });
+        audio1.addEventListener('canplay', handleAudio1Ready, { once: true });
+        audio1.addEventListener('canplaythrough', handleAudio1Ready, { once: true });
+        
+        // 强制加载
+        audio1.load();
+        
+        // 移动端：如果加载超时，恢复按钮状态
+        if (isMobile) {
+            setTimeout(() => {
+                if (!audio1Ready && playBtn) {
+                    playBtn.innerHTML = originalBtnText || '<span>▶️</span> 播放音程';
+                    playBtn.disabled = false;
+                }
+            }, 3000); // 3秒超时
+        }
+    }
+    
+    audio1.addEventListener('ended', () => {
+        // 第一个音符播放完后立即播放第二个音符（0.5秒）
+        const audio2 = new Audio(`/static/audio/${note2File}`);
+        if (isMobile) {
+            audio2.preload = 'metadata';
+        } else {
+            audio2.preload = 'auto';
+        }
+        
+        let audio2Ready = false;
+        const handleAudio2Ready = () => {
+            if (audio2Ready) return;
+            audio2Ready = true;
+            
+            audio2.addEventListener('timeupdate', () => {
+                if (audio2.currentTime >= 0.5) {
+                    audio2.pause();
+                    audio2.currentTime = 0;
+                }
+            });
+            audio2.play().catch(e => {
+                console.error('播放第二个音符失败:', e);
+            });
+        };
+        
+        if (audio2.readyState >= 2) {
+            handleAudio2Ready();
+        } else {
+            audio2.addEventListener('loadedmetadata', handleAudio2Ready, { once: true });
+            audio2.addEventListener('canplay', handleAudio2Ready, { once: true });
+            audio2.load();
+        }
+        
+        window.intervalAudioContexts.push({ audio: audio2 });
+    });
+    
+    // 0.5秒后停止第一个音符并开始播放第二个（备用方案）
+    setTimeout(() => {
+        if (audio1 && !audio1.paused) {
+            audio1.pause();
+            const audio2 = new Audio(`/static/audio/${note2File}`);
+            if (isMobile) {
+                audio2.preload = 'metadata';
+            } else {
+                audio2.preload = 'auto';
+            }
+            
+            let audio2Ready = false;
+            const handleAudio2Ready = () => {
+                if (audio2Ready) return;
+                audio2Ready = true;
+                
+                audio2.addEventListener('timeupdate', () => {
+                    if (audio2.currentTime >= 0.5) {
+                        audio2.pause();
+                        audio2.currentTime = 0;
+                    }
+                });
+                audio2.play().catch(e => {
+                    console.error('播放第二个音符失败:', e);
+                });
+            };
+            
+            if (audio2.readyState >= 2) {
+                handleAudio2Ready();
+            } else {
+                audio2.addEventListener('loadedmetadata', handleAudio2Ready, { once: true });
+                audio2.addEventListener('canplay', handleAudio2Ready, { once: true });
+                audio2.load();
+            }
+            
+            window.intervalAudioContexts.push({ audio: audio2 });
+        }
+    }, 500);
+    
+    window.intervalAudioContexts.push({ audio: audio1 });
 }
 
 // 重复播放音频
@@ -366,6 +950,44 @@ function repeatAudio() {
     }
 }
 
+// 播放和弦音频（同时播放多个音符）
+function playChordAudio() {
+    if (!window.chordAudioFiles || window.chordAudioFiles.length === 0) {
+        console.error('没有和弦音频文件');
+        return;
+    }
+    
+    // 停止之前播放的音频
+    if (window.chordAudioContexts) {
+        window.chordAudioContexts.forEach(ctx => {
+            if (ctx.audioContext) {
+                ctx.audioContext.close();
+            }
+        });
+    }
+    
+    window.chordAudioContexts = [];
+    
+    // 同时播放所有和弦音符
+    window.chordAudioFiles.forEach((audioFile, index) => {
+        const audio = new Audio(`/static/audio/${audioFile}`);
+        const audioContext = {
+            audio: audio,
+            audioContext: null
+        };
+        
+        audio.addEventListener('ended', () => {
+            audioContext.audioContext = null;
+        });
+        
+        audio.play().catch(e => {
+            console.error(`播放和弦音符 ${index + 1} 失败:`, e);
+        });
+        
+        window.chordAudioContexts.push(audioContext);
+    });
+}
+
 // 下一题
 function nextQuestion() {
     loadQuestion();
@@ -373,17 +995,65 @@ function nextQuestion() {
 
 // 页面加载时初始化
 document.addEventListener('DOMContentLoaded', () => {
+    // 获取当前练习类型
+    const exerciseType = window.location.pathname.split('/').pop();
+    window.exerciseType = exerciseType;
+    
     // 初始化默认设置（如果还没有设置）
     if (!sessionStorage.getItem('practice_settings')) {
-        const checkedIntervals = Array.from(document.querySelectorAll('input[name="intervals"]:checked')).map(cb => cb.value);
-        const checkedDirections = Array.from(document.querySelectorAll('input[name="directions"]:checked')).map(cb => cb.value);
-        const defaultSettings = {
-            intervals: checkedIntervals.length > 0 ? checkedIntervals : ['minor_second', 'major_second', 'minor_third', 'major_third', 'perfect_fourth', 'perfect_fifth'],
-            directions: checkedDirections.length > 0 ? checkedDirections : ['up', 'down'],
+        let defaultSettings = {
             total_questions: '20'
         };
+        
+        if (exerciseType === 'interval') {
+            const checkedIntervals = Array.from(document.querySelectorAll('input[name="intervals"]:checked')).map(cb => cb.value);
+            const checkedDirections = Array.from(document.querySelectorAll('input[name="directions"]:checked')).map(cb => cb.value);
+            defaultSettings.intervals = checkedIntervals.length > 0 ? checkedIntervals : ['minor_second', 'major_second', 'minor_third', 'major_third', 'perfect_fourth', 'perfect_fifth'];
+            defaultSettings.directions = checkedDirections.length > 0 ? checkedDirections : ['up', 'down'];
+        } else if (exerciseType === 'scale_degree') {
+            const scaleType = document.querySelector('select[name="scale_type"]')?.value || 'major';
+            const key = document.querySelector('select[name="key"]')?.value || 'C';
+            const octave = document.querySelector('select[name="octave"]')?.value || '4';
+            const octaveRange = document.querySelector('select[name="octave_range"]')?.value || '1';
+            defaultSettings.scale_type = scaleType;
+            defaultSettings.key = key;
+            defaultSettings.octave = octave;
+            defaultSettings.octave_range = octaveRange;
+        } else if (exerciseType === 'chord_quality') {
+            const key = document.querySelector('select[name="key"]')?.value || 'C';
+            const checkedChordTypes = Array.from(document.querySelectorAll('input[name="chord_types"]:checked')).map(cb => cb.value);
+            const checkedRomanNumerals = Array.from(document.querySelectorAll('input[name="roman_numerals"]:checked')).map(cb => cb.value);
+            defaultSettings.key = key;
+            defaultSettings.chord_types = checkedChordTypes.length > 0 ? checkedChordTypes : ['major', 'minor', 'diminished', 'dominant7th', 'major7th', 'minor7th'];
+            // 默认只选择I级
+            defaultSettings.roman_numerals = checkedRomanNumerals.length > 0 ? checkedRomanNumerals : ['I'];
+        }
+        
         sessionStorage.setItem('practice_settings', JSON.stringify(defaultSettings));
+    } else {
+        // 如果已有设置，但缺少某些字段，补充默认值
+        const settings = JSON.parse(sessionStorage.getItem('practice_settings') || '{}');
+        let needUpdate = false;
+        
+        if (exerciseType === 'chord_quality') {
+            // 如果没有roman_numerals字段，从表单中读取或使用默认值
+            if (!settings.roman_numerals || settings.roman_numerals.length === 0) {
+                const checkedRomanNumerals = Array.from(document.querySelectorAll('input[name="roman_numerals"]:checked')).map(cb => cb.value);
+                settings.roman_numerals = checkedRomanNumerals.length > 0 ? checkedRomanNumerals : ['I'];
+                needUpdate = true;
+            }
+        }
+        
+        if (needUpdate) {
+            sessionStorage.setItem('practice_settings', JSON.stringify(settings));
+        }
     }
+    
+    // 初始化题目数量
+    const settings = JSON.parse(sessionStorage.getItem('practice_settings') || '{}');
+    totalQuestions = parseInt(settings.total_questions) || 20;
+    currentScore = 0;
+    currentTotal = 0;
     
     // 绑定按钮事件
     const btnRepeat = document.getElementById('btn-repeat');
@@ -395,6 +1065,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btnNext.addEventListener('click', nextQuestion);
     }
     
+    // 开始新会话
+    startNewSession();
+    
     loadQuestion();
+    
+    // 页面卸载时结束会话
+    window.addEventListener('beforeunload', () => {
+        endCurrentSession();
+    });
 });
 

@@ -148,6 +148,35 @@
     opacity: 0.7;
 }
 
+/* 开发中状态 */
+.exercise-card.developing {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.exercise-card.developing:hover {
+    transform: none;
+    border-color: var(--border);
+}
+
+.exercise-card.developing::before {
+    background: #ef4444;
+    transform: scaleX(1);
+}
+
+.exercise-card-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 4px 8px;
+    background: #ef4444;
+    color: white;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 4px;
+    z-index: 1;
+}
+
 /* 介绍区域 */
 .intro-section {
     background: var(--bg-secondary);
@@ -252,7 +281,11 @@
         <!-- 练习卡片 -->
         <div class="exercise-cards">
             {% for type_key, exercise in exercise_types.items() %}
-            <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-card">
+            <a href="{{ url_for('practice', exercise_type=type_key) if exercise.get('status') != 'developing' else '#' }}" 
+               class="exercise-card {{ 'developing' if exercise.get('status') == 'developing' else '' }}">
+                {% if exercise.get('status') == 'developing' %}
+                <div class="exercise-card-status">开发中...</div>
+                {% endif %}
                 <div class="exercise-card-header">
                     <div class="exercise-card-icon">
                         {{ exercise.icon }}
@@ -317,8 +350,16 @@
                     <div class="intro-feature-desc">学习识别不同类型的和弦，理解和弦的构成和性质。</div>
                 </div>
                 <div class="intro-feature">
-                    <div class="intro-feature-title">🎶 旋律训练</div>
-                    <div class="intro-feature-desc">通过旋律片段练习，提升整体音乐感知和记忆能力。</div>
+                    <div class="intro-feature-title">🔄 和弦转位</div>
+                    <div class="intro-feature-desc">识别和弦的转位形式，理解低音对和弦色彩的影响。（开发中）</div>
+                </div>
+                <div class="intro-feature">
+                    <div class="intro-feature-title">🎶 和弦进行</div>
+                    <div class="intro-feature-desc">识别和弦进行的模式，理解功能和声的进行逻辑。（开发中）</div>
+                </div>
+                <div class="intro-feature">
+                    <div class="intro-feature-title">💿 旋律训练</div>
+                    <div class="intro-feature-desc">通过旋律片段练习，提升整体音乐感知和记忆能力。（开发中）</div>
                 </div>
             </div>
         </div>

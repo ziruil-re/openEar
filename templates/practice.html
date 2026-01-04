@@ -28,21 +28,6 @@
         </div>
         {% endif %}
         
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span class="stat-label">进度</span>
-                <span class="stat-value" id="progress">0/20</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">得分</span>
-                <span class="stat-value" id="score">0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">准确率</span>
-                <span class="stat-value" id="accuracy">0%</span>
-            </div>
-        </div>
-
         <div class="question-area" id="question-area">
             <div class="loading-state">
                 <div class="loading-spinner"></div>
@@ -150,6 +135,50 @@
                                 两个八度时，题目可能包含第二个八度的音（如9音、10音等）
                             </p>
                         </div>
+                        {% elif exercise_type == 'chord_quality' %}
+                        <div class="form-group">
+                            <label>🎹 选择调性：</label>
+                            <select name="key" class="form-select">
+                                {% for key in keys %}
+                                <option value="{{ key }}" {% if key == 'C' %}selected{% endif %}>{{ key }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>🎼 选择和弦类型：</label>
+                            <div class="checkbox-group">
+                                {% for chord_key, chord_info in chord_types.items() %}
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="chord_types" value="{{ chord_key }}" 
+                                           {% if chord_key in ['major', 'minor', 'diminished', 'dominant7th', 'major7th', 'minor7th'] %}checked{% endif %}>
+                                    <span>{{ chord_info.cn }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="select-all-chords">
+                                    <strong>全选</strong>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>🎵 选择和弦级数：</label>
+                            <div class="checkbox-group">
+                                {% for roman in roman_numerals %}
+                                <label class="checkbox-item">
+                                    <input type="checkbox" name="roman_numerals" value="{{ roman }}" {% if roman == 'I' %}checked{% endif %}>
+                                    <span>{{ roman }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <label class="checkbox-item">
+                                    <input type="checkbox" id="select-all-roman">
+                                    <strong>全选</strong>
+                                </label>
+                            </div>
+                        </div>
                         {% endif %}
                         <div class="form-group">
                             <label>🔢 题目数量：</label>
@@ -171,9 +200,83 @@
             <div class="tab-content" id="explanation-tab">
                 <div class="sidebar-section">
                     <h3>💡 AI秘籍</h3>
-                    <p style="font-size: 12px; color: var(--hf-text-tertiary); margin-bottom: 12px;">
-                        💡 <strong>Pro Tip:</strong> 以下歌曲可以帮助您更好地识别音程/音阶。建议在 <span class="geek-term">网易云音乐</span> 中搜索并添加到歌单。
-                    </p>
+                    
+                    {% if exercise_type == 'interval' %}
+                    <!-- 音程选择下拉框（多选） -->
+                    <div class="form-group ai-secret-select-group">
+                        <label>选择音程查看参考歌曲：</label>
+                        <div class="custom-multiselect">
+                            <div class="custom-multiselect-trigger" id="interval-select-trigger">
+                                <span class="custom-multiselect-text">请选择音程</span>
+                                <span class="custom-multiselect-arrow">▼</span>
+                            </div>
+                            <div class="custom-multiselect-dropdown" id="interval-select-dropdown">
+                                <div class="custom-multiselect-actions">
+                                    <button type="button" class="custom-multiselect-action-btn" id="select-all-intervals-ai">全选</button>
+                                    <button type="button" class="custom-multiselect-action-btn" id="deselect-all-intervals-ai">反选</button>
+                                </div>
+                                <div class="custom-multiselect-options" id="interval-select-options">
+                                    {% for semitone, interval in intervals.items() %}
+                                    <label class="custom-multiselect-option">
+                                        <input type="checkbox" value="{{ interval.name }}" data-label="{{ interval.cn }}" checked>
+                                        <span>{{ interval.cn }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif exercise_type == 'scale_degree' %}
+                    <!-- 音阶选择下拉框（多选） -->
+                    <div class="form-group ai-secret-select-group">
+                        <label>选择音阶查看参考歌曲：</label>
+                        <div class="custom-multiselect">
+                            <div class="custom-multiselect-trigger" id="scale-select-trigger">
+                                <span class="custom-multiselect-text">请选择音阶</span>
+                                <span class="custom-multiselect-arrow">▼</span>
+                            </div>
+                            <div class="custom-multiselect-dropdown" id="scale-select-dropdown">
+                                <div class="custom-multiselect-actions">
+                                    <button type="button" class="custom-multiselect-action-btn" id="select-all-scales-ai">全选</button>
+                                    <button type="button" class="custom-multiselect-action-btn" id="deselect-all-scales-ai">反选</button>
+                                </div>
+                                <div class="custom-multiselect-options" id="scale-select-options">
+                                    {% for scale_key, scale_info in scales.items() %}
+                                    <label class="custom-multiselect-option">
+                                        <input type="checkbox" value="{{ scale_key }}" data-label="{{ scale_info.name }} ({{ scale_info.name_en }})" {% if scale_key == 'major' %}checked{% endif %}>
+                                        <span>{{ scale_info.name }} ({{ scale_info.name_en }})</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% elif exercise_type == 'chord_quality' %}
+                    <!-- 和弦类型选择下拉框（多选） -->
+                    <div class="form-group ai-secret-select-group">
+                        <label>选择和弦类型查看参考歌曲：</label>
+                        <div class="custom-multiselect">
+                            <div class="custom-multiselect-trigger" id="chord-select-trigger">
+                                <span class="custom-multiselect-text">请选择和弦类型</span>
+                                <span class="custom-multiselect-arrow">▼</span>
+                            </div>
+                            <div class="custom-multiselect-dropdown" id="chord-select-dropdown">
+                                <div class="custom-multiselect-actions">
+                                    <button type="button" class="custom-multiselect-action-btn" id="select-all-chords-ai">全选</button>
+                                    <button type="button" class="custom-multiselect-action-btn" id="deselect-all-chords-ai">反选</button>
+                                </div>
+                                <div class="custom-multiselect-options" id="chord-select-options">
+                                    {% for chord_key, chord_info in chord_types.items() %}
+                                    <label class="custom-multiselect-option">
+                                        <input type="checkbox" value="{{ chord_key }}" data-label="{{ chord_info.cn }} ({{ chord_info.name }})" checked>
+                                        <span>{{ chord_info.cn }} ({{ chord_info.name }})</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     
                     <!-- JSON数据歌曲展示区域 -->
                     <div id="json-songs-container"></div>
@@ -455,37 +558,167 @@ function initAudioPlayers() {
             // 构建音频URL
             // audioSrc格式可能是 "songs/xxx.mp3" 或完整URL
             let audioUrl;
+            let use1minVersion = false;
+            
             if (audioSrc.startsWith('http')) {
                 audioUrl = audioSrc;
             } else if (audioSrc.startsWith('songs/')) {
-                // 如果已经是songs/开头，直接拼接
-                audioUrl = `/static/audio/${audioSrc}`;
+                // 优先使用1分钟版本（如果存在）
+                const audioPath1min = audioSrc.replace('songs/', 'songs_1min/');
+                audioUrl = `/static/audio/${audioPath1min}`;
+                use1minVersion = true;
             } else {
                 // 其他情况，也拼接
                 audioUrl = `/static/audio/${audioSrc}`;
             }
             
-            // 设置音频源
-            audio.src = audioUrl;
+            // 移动端优化：使用 metadata 预加载
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            if (isMobile) {
+                audio.preload = 'metadata';
+            } else {
+                audio.preload = 'auto';
+            }
             
-            // 标记为已初始化
-            audio.dataset.initialized = 'true';
-            
-            // 监听错误事件
-            audio.addEventListener('error', function(e) {
-                console.error('音频加载失败:', audioUrl, e);
-                // 不显示错误，让浏览器默认处理
-            });
-            
-            // 监听timeupdate事件，限制播放1分钟
-            audio.addEventListener('timeupdate', function() {
-                if (this.currentTime >= 60) {
-                    this.pause();
-                    this.currentTime = 60;
+            // 如果使用1分钟版本，先检查是否存在
+            if (use1minVersion) {
+                const testAudio = new Audio();
+                testAudio.src = audioUrl;
+                
+                const setupAudio = (finalUrl) => {
+                    audio.src = finalUrl;
+                    audio.dataset.initialized = 'true';
+                    
+                    // 监听加载事件（移动端）
+                    audio.addEventListener('loadstart', function() {
+                        // 音频开始加载
+                    });
+                    
+                    audio.addEventListener('loadedmetadata', function() {
+                        // 元数据加载完成
+                    });
+                    
+                    audio.addEventListener('canplay', function() {
+                        // 音频可以播放
+                    });
+                    
+                    // 监听错误事件
+                    audio.addEventListener('error', function(e) {
+                        console.error('音频加载失败:', finalUrl, e);
+                        // 移动端错误处理
+                        if (this.error) {
+                            console.warn('音频错误代码:', this.error.code);
+                        }
+                    });
+                    
+                    // 监听timeupdate事件，限制播放1分钟（如果使用原文件）
+                    if (!use1minVersion) {
+                        audio.addEventListener('timeupdate', function() {
+                            if (this.currentTime >= 60) {
+                                this.pause();
+                                this.currentTime = 60;
+                            }
+                        });
+                    }
+                    
+                    // 移动端：用户点击播放时才加载完整音频
+                    if (isMobile) {
+                        audio.addEventListener('play', function() {
+                            if (this.readyState < 2) {
+                                this.load();
+                            }
+                        }, { once: true });
+                    }
+                };
+                
+                // 检查1分钟版本是否存在
+                testAudio.addEventListener('error', function() {
+                    // 如果1分钟版本不存在，回退到原文件
+                    const originalUrl = `/static/audio/${audioSrc}`;
+                    use1minVersion = false;
+                    setupAudio(originalUrl);
+                }, { once: true });
+                
+                testAudio.addEventListener('loadedmetadata', function() {
+                    // 1分钟版本存在，使用它
+                    setupAudio(audioUrl);
+                }, { once: true });
+                
+                // 开始检查
+                testAudio.load();
+            } else {
+                // 直接使用原文件
+                audio.src = audioUrl;
+                audio.dataset.initialized = 'true';
+                
+                // 监听加载事件（移动端）
+                audio.addEventListener('loadstart', function() {
+                    // 音频开始加载
+                });
+                
+                audio.addEventListener('loadedmetadata', function() {
+                    // 元数据加载完成
+                });
+                
+                audio.addEventListener('canplay', function() {
+                    // 音频可以播放
+                });
+                
+                // 监听错误事件
+                audio.addEventListener('error', function(e) {
+                    console.error('音频加载失败:', audioUrl, e);
+                    // 移动端错误处理
+                    if (this.error) {
+                        console.warn('音频错误代码:', this.error.code);
+                    }
+                });
+                
+                // 监听timeupdate事件，限制播放1分钟
+                audio.addEventListener('timeupdate', function() {
+                    if (this.currentTime >= 60) {
+                        this.pause();
+                        this.currentTime = 60;
+                    }
+                });
+                
+                // 移动端：用户点击播放时才加载完整音频
+                if (isMobile) {
+                    audio.addEventListener('play', function() {
+                        if (this.readyState < 2) {
+                            this.load();
+                        }
+                    }, { once: true });
                 }
-            });
+            }
         }
     });
+}
+
+// 更新自定义下拉框显示的文本
+function updateCustomSelectText(triggerId, optionsContainerId) {
+    const trigger = document.getElementById(triggerId);
+    const optionsContainer = document.getElementById(optionsContainerId);
+    if (!trigger || !optionsContainer) return;
+    
+    const checkedBoxes = optionsContainer.querySelectorAll('input[type="checkbox"]:checked');
+    const textSpan = trigger.querySelector('.custom-multiselect-text');
+    
+    if (checkedBoxes.length === 0) {
+        textSpan.textContent = '请选择';
+    } else if (checkedBoxes.length === 1) {
+        textSpan.textContent = checkedBoxes[0].dataset.label || checkedBoxes[0].value;
+    } else {
+        textSpan.textContent = `已选择 ${checkedBoxes.length} 项`;
+    }
+}
+
+// 获取自定义下拉框选中的值
+function getCustomSelectValues(optionsContainerId) {
+    const optionsContainer = document.getElementById(optionsContainerId);
+    if (!optionsContainer) return [];
+    
+    const checkedBoxes = optionsContainer.querySelectorAll('input[type="checkbox"]:checked');
+    return Array.from(checkedBoxes).map(cb => cb.value);
 }
 
 // 更新JSON歌曲显示
@@ -497,9 +730,14 @@ function updateJsonSongsDisplay() {
     let groupedSongs = {};
     
     if (exerciseType === 'interval') {
-        // 获取选中的音程
-        const checkedBoxes = document.querySelectorAll('input[name="intervals"]:checked');
-        const selectedIntervals = Array.from(checkedBoxes).map(cb => cb.value);
+        // 获取选中的音程（优先使用AI秘籍页面的自定义下拉框，否则使用设置页面的复选框）
+        let selectedIntervals = getCustomSelectValues('interval-select-options');
+        
+        // 如果没有选中的，使用设置页面的复选框
+        if (selectedIntervals.length === 0) {
+            const checkedBoxes = document.querySelectorAll('input[name="intervals"]:checked');
+            selectedIntervals = Array.from(checkedBoxes).map(cb => cb.value);
+        }
         
         if (selectedIntervals.length === 0) {
             container.innerHTML = '<p style="color: var(--text-secondary, #6b7280); font-size: 12px;">请选择音程后查看参考歌曲</p>';
@@ -534,15 +772,25 @@ function updateJsonSongsDisplay() {
             }
         });
     } else if (exerciseType === 'scale_degree') {
-        // 获取选中的音阶
-        const scaleSelect = document.querySelector('select[name="scale_type"]');
-        const selectedScale = scaleSelect ? scaleSelect.value : 'major';
+        // 获取选中的音阶（优先使用AI秘籍页面的自定义下拉框，否则使用设置页面的下拉框）
+        let selectedScales = getCustomSelectValues('scale-select-options');
         
-        // 音阶名称映射
+        // 如果没有选中的，使用设置页面的下拉框
+        if (selectedScales.length === 0) {
+            const scaleSelect = document.querySelector('select[name="scale_type"]');
+            if (scaleSelect && scaleSelect.value) {
+                selectedScales.push(scaleSelect.value);
+            } else {
+                selectedScales.push('major'); // 默认
+            }
+        }
+        
+        // 音阶名称映射（数据文件key -> 显示名称）
         const scaleNames = {
             'major': '大调',
-            'minor': '小调',
+            'ionian': '伊奥尼亚调式',
             'natural_minor': '自然小调',
+            'aeolian': '爱奥利亚调式',
             'harmonic_minor': '和声小调',
             'melodic_minor': '旋律小调',
             'dorian': '多利亚调式',
@@ -558,9 +806,125 @@ function updateJsonSongsDisplay() {
             'diminished': '减音阶'
         };
         
-        if (songsData.scale_degree && songsData.scale_degree[selectedScale]) {
-            const scaleCnName = scaleNames[selectedScale] || selectedScale;
-            groupedSongs[scaleCnName] = songsData.scale_degree[selectedScale];
+        // 数据文件key映射（代码中的key -> 数据文件中的key）
+        const scaleKeyMapping = {
+            'major': 'major',
+            'ionian': 'ionian',
+            'natural_minor': 'natural_minor',
+            'aeolian': 'aeolian',
+            'harmonic_minor': 'harmonic_minor',
+            'melodic_minor': 'melodic_minor',
+            'dorian': 'dorian',
+            'mixolydian': 'mixolydian',
+            'lydian': 'lydian',
+            'phrygian': 'phrygian',
+            'locrian': 'locrian',
+            'pentatonic_major': 'pentatonic_major',
+            'pentatonic_minor': 'pentatonic_minor',
+            'blues_scale': 'blues_scale',
+            'blues': 'blues_scale', // blues映射到blues_scale
+            'whole_tone': 'whole_tone',
+            'diminished': 'diminished'
+        };
+        
+        selectedScales.forEach(scaleKey => {
+            // 先尝试直接匹配
+            let dataKey = scaleKey;
+            // 如果映射表中存在，使用映射
+            if (scaleKeyMapping[scaleKey]) {
+                dataKey = scaleKeyMapping[scaleKey];
+            }
+            
+            if (songsData.scale_degree && songsData.scale_degree[dataKey]) {
+                const scaleCnName = scaleNames[scaleKey] || scaleNames[dataKey] || scaleKey;
+                groupedSongs[scaleCnName] = songsData.scale_degree[dataKey];
+            }
+        });
+    } else if (exerciseType === 'chord_quality') {
+        // 和弦练习：根据AI秘籍自定义下拉框的选择过滤（支持多选）
+        let selectedChordTypes = getCustomSelectValues('chord-select-options');
+        
+        // 和弦名称映射（代码中的key -> 显示名称）
+        const chordNames = {
+            'major': '大三和弦',
+            'minor': '小三和弦',
+            'diminished': '减三和弦',
+            'augmented': '增三和弦',
+            'sus4': '挂四和弦',
+            'suspended_fourth': '挂四和弦',
+            'sus2': '挂二和弦',
+            'suspended_second': '挂二和弦',
+            'major6th': '大六和弦',
+            'sixth': '大六和弦',
+            'minor6th': '小六和弦',
+            'major7th': '大七和弦',
+            'major_seventh': '大七和弦',
+            'minor7th': '小七和弦',
+            'minor_seventh': '小七和弦',
+            'dominant7th': '属七和弦',
+            'dominant_seventh': '属七和弦',
+            'diminished7th': '减七和弦',
+            'half_diminished7th': '半减七和弦',
+            'minor_major_seventh': '小大七和弦'
+        };
+        
+        // 数据文件key映射（代码中的key -> 数据文件中的key）
+        const chordKeyMapping = {
+            'major': 'major',
+            'minor': 'minor',
+            'diminished': 'diminished',
+            'augmented': 'augmented',
+            'sus4': 'suspended_fourth',
+            'suspended_fourth': 'suspended_fourth',
+            'sus2': 'suspended_second',
+            'suspended_second': 'suspended_second',
+            'major6th': 'sixth',
+            'sixth': 'sixth',
+            'minor6th': 'sixth', // 注意：数据文件中可能没有单独的minor6th
+            'major7th': 'major_seventh',
+            'major_seventh': 'major_seventh',
+            'minor7th': 'minor_seventh',
+            'minor_seventh': 'minor_seventh',
+            'dominant7th': 'dominant_seventh',
+            'dominant_seventh': 'dominant_seventh',
+            'diminished7th': 'diminished', // 注意：可能需要检查
+            'half_diminished7th': 'diminished',
+            'minor_major_seventh': 'minor_major_seventh'
+        };
+        
+        if (songsData.chord_quality) {
+            if (selectedChordTypes.length > 0) {
+                // 显示选中的和弦类型
+                selectedChordTypes.forEach(chordKey => {
+                    // 先尝试直接匹配
+                    let dataKey = chordKey;
+                    // 如果映射表中存在，使用映射
+                    if (chordKeyMapping[chordKey]) {
+                        dataKey = chordKeyMapping[chordKey];
+                    }
+                    
+                    if (songsData.chord_quality[dataKey]) {
+                        const chordCnName = chordNames[chordKey] || chordNames[dataKey] || chordKey;
+                        groupedSongs[chordCnName] = songsData.chord_quality[dataKey];
+                    }
+                });
+            } else {
+                // 显示所有和弦类型
+                Object.keys(songsData.chord_quality).forEach(key => {
+                    const songList = songsData.chord_quality[key];
+                    if (Array.isArray(songList) && songList.length > 0) {
+                        // 尝试找到对应的显示名称
+                        let displayName = key;
+                        for (const [codeKey, dataKey] of Object.entries(chordKeyMapping)) {
+                            if (dataKey === key && chordNames[codeKey]) {
+                                displayName = chordNames[codeKey];
+                                break;
+                            }
+                        }
+                        groupedSongs[displayName] = songList;
+                    }
+                });
+            }
         }
     } else if (songsData[exerciseType]) {
         // 其他练习类型，显示所有songs
@@ -585,10 +949,64 @@ function updateJsonSongsDisplay() {
     setTimeout(initAudioPlayers, 50);
 }
 
-// 监听音程选择变化
+    // 初始化自定义下拉框
+    function initCustomMultiselect(triggerId, dropdownId, optionsContainerId) {
+        const trigger = document.getElementById(triggerId);
+        const dropdown = document.getElementById(dropdownId);
+        const optionsContainer = document.getElementById(optionsContainerId);
+        
+        if (!trigger || !dropdown || !optionsContainer) return;
+        
+        // 存储dropdownId到trigger上，方便关闭其他下拉框
+        trigger.dataset.dropdownId = dropdownId;
+        
+        // 点击触发器显示/隐藏浮窗
+        trigger.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isActive = trigger.classList.contains('active');
+            
+            // 关闭所有其他下拉框
+            document.querySelectorAll('.custom-multiselect-trigger').forEach(t => {
+                if (t !== trigger && t.dataset.dropdownId) {
+                    t.classList.remove('active');
+                    const otherDropdown = document.getElementById(t.dataset.dropdownId);
+                    if (otherDropdown) {
+                        otherDropdown.classList.remove('show');
+                    }
+                }
+            });
+            
+            if (isActive) {
+                trigger.classList.remove('active');
+                dropdown.classList.remove('show');
+            } else {
+                trigger.classList.add('active');
+                dropdown.classList.add('show');
+            }
+        });
+        
+        // 点击选项时更新显示
+        optionsContainer.addEventListener('change', function() {
+            updateCustomSelectText(triggerId, optionsContainerId);
+            updateJsonSongsDisplay();
+        });
+        
+        // 点击外部关闭浮窗
+        document.addEventListener('click', function(e) {
+            if (!trigger.contains(e.target) && !dropdown.contains(e.target)) {
+                trigger.classList.remove('active');
+                dropdown.classList.remove('show');
+            }
+        });
+        
+        // 初始化显示文本
+        updateCustomSelectText(triggerId, optionsContainerId);
+    }
+    
+    // 监听音程选择变化
 document.addEventListener('DOMContentLoaded', function() {
     {% if exercise_type == 'interval' %}
-    // 监听音程复选框变化
+    // 监听音程复选框变化（设置页面）
     const intervalCheckboxes = document.querySelectorAll('input[name="intervals"]');
     intervalCheckboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
@@ -598,11 +1016,42 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // 初始化自定义下拉框
+    initCustomMultiselect('interval-select-trigger', 'interval-select-dropdown', 'interval-select-options');
+    
+    // 全选音程（AI秘籍页面）
+    const selectAllIntervalsAI = document.getElementById('select-all-intervals-ai');
+    if (selectAllIntervalsAI) {
+        selectAllIntervalsAI.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const optionsContainer = document.getElementById('interval-select-options');
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+                updateCustomSelectText('interval-select-trigger', 'interval-select-options');
+                updateJsonSongsDisplay();
+            }
+        });
+    }
+    
+    // 反选音程（AI秘籍页面）
+    const deselectAllIntervalsAI = document.getElementById('deselect-all-intervals-ai');
+    if (deselectAllIntervalsAI) {
+        deselectAllIntervalsAI.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const optionsContainer = document.getElementById('interval-select-options');
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = !cb.checked);
+                updateCustomSelectText('interval-select-trigger', 'interval-select-options');
+                updateJsonSongsDisplay();
+            }
+        });
+    }
+    
     // 默认显示所有选中的音程
     updateIntervalKB();
     updateJsonSongsDisplay();
     {% elif exercise_type == 'scale_degree' %}
-    // 监听音阶选择变化
+    // 监听音阶选择变化（设置页面的下拉框）
     const scaleSelect = document.querySelector('select[name="scale_type"]');
     if (scaleSelect) {
         scaleSelect.addEventListener('change', function() {
@@ -614,6 +1063,71 @@ document.addEventListener('DOMContentLoaded', function() {
         updateScaleKB(scaleSelect.value);
         updateJsonSongsDisplay();
     }
+    
+    // 初始化自定义下拉框
+    initCustomMultiselect('scale-select-trigger', 'scale-select-dropdown', 'scale-select-options');
+    
+    // 全选音阶（AI秘籍页面）
+    const selectAllScalesAI = document.getElementById('select-all-scales-ai');
+    if (selectAllScalesAI) {
+        selectAllScalesAI.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const optionsContainer = document.getElementById('scale-select-options');
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+                updateCustomSelectText('scale-select-trigger', 'scale-select-options');
+                updateJsonSongsDisplay();
+            }
+        });
+    }
+    
+    // 反选音阶（AI秘籍页面）
+    const deselectAllScalesAI = document.getElementById('deselect-all-scales-ai');
+    if (deselectAllScalesAI) {
+        deselectAllScalesAI.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const optionsContainer = document.getElementById('scale-select-options');
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = !cb.checked);
+                updateCustomSelectText('scale-select-trigger', 'scale-select-options');
+                updateJsonSongsDisplay();
+            }
+        });
+    }
+    {% elif exercise_type == 'chord_quality' %}
+    // 初始化自定义下拉框
+    initCustomMultiselect('chord-select-trigger', 'chord-select-dropdown', 'chord-select-options');
+    
+    // 全选和弦（AI秘籍页面）
+    const selectAllChordsAI = document.getElementById('select-all-chords-ai');
+    if (selectAllChordsAI) {
+        selectAllChordsAI.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const optionsContainer = document.getElementById('chord-select-options');
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+                updateCustomSelectText('chord-select-trigger', 'chord-select-options');
+                updateJsonSongsDisplay();
+            }
+        });
+    }
+    
+    // 反选和弦（AI秘籍页面）
+    const deselectAllChordsAI = document.getElementById('deselect-all-chords-ai');
+    if (deselectAllChordsAI) {
+        deselectAllChordsAI.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const optionsContainer = document.getElementById('chord-select-options');
+            if (optionsContainer) {
+                optionsContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = !cb.checked);
+                updateCustomSelectText('chord-select-trigger', 'chord-select-options');
+                updateJsonSongsDisplay();
+            }
+        });
+    }
+    
+    // 默认显示所有和弦
+    updateJsonSongsDisplay();
     {% else %}
     // 其他练习类型，直接显示
     updateJsonSongsDisplay();
@@ -639,6 +1153,82 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 初始加载时也初始化
     setTimeout(initAudioPlayers, 100);
+    
+    // 修复AI秘籍下拉框宽度（与practice.js中的函数保持一致）
+    function fixAISelectWidth() {
+        const explanationTab = document.getElementById('explanation-tab');
+        if (!explanationTab || !explanationTab.classList.contains('active')) {
+            return; // tab没有显示，不处理
+        }
+        
+        const scaleSelect = document.getElementById('scale-select-ai');
+        const intervalSelect = document.getElementById('interval-select-ai');
+        const chordSelect = document.getElementById('chord-select-ai');
+        const select = scaleSelect || intervalSelect || chordSelect;
+        
+        if (!select) {
+            return;
+        }
+        
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarContent = document.querySelector('.sidebar-content');
+        
+        if (!sidebar || !sidebarContent) {
+            return;
+        }
+        
+        // 获取sidebar的实际宽度
+        const sidebarWidth = sidebar.offsetWidth;
+        const sidebarContentPadding = 
+            (parseInt(window.getComputedStyle(sidebarContent).paddingLeft) || 0) + 
+            (parseInt(window.getComputedStyle(sidebarContent).paddingRight) || 0);
+        
+        const expectedWidth = sidebarWidth - sidebarContentPadding;
+        
+        // 如果宽度为0或不足，强制修复
+        if (select.offsetWidth === 0 || select.offsetWidth < expectedWidth - 10) {
+            // 强制设置所有相关元素的宽度
+            const parent = select.parentElement;
+            if (parent && parent.classList.contains('ai-secret-select-group')) {
+                parent.style.setProperty('width', '100%', 'important');
+                parent.style.setProperty('max-width', '100%', 'important');
+                parent.style.setProperty('box-sizing', 'border-box', 'important');
+            }
+            
+            // 设置下拉框宽度
+            if (expectedWidth > 0) {
+                select.style.setProperty('width', expectedWidth + 'px', 'important');
+                select.style.setProperty('max-width', expectedWidth + 'px', 'important');
+            } else {
+                select.style.setProperty('width', '100%', 'important');
+                select.style.setProperty('max-width', '100%', 'important');
+            }
+            select.style.setProperty('min-width', '0', 'important');
+            select.style.setProperty('box-sizing', 'border-box', 'important');
+            select.style.setProperty('display', 'block', 'important');
+        }
+    }
+    
+    // 监听tab切换
+    const explanationTabBtn = document.querySelector('[data-tab="explanation"]');
+    if (explanationTabBtn) {
+        explanationTabBtn.addEventListener('click', () => {
+            setTimeout(fixAISelectWidth, 150);
+        });
+    }
+    
+    // 页面加载完成后，如果AI秘籍tab是激活的，修复宽度
+    setTimeout(() => {
+        const explanationTab = document.getElementById('explanation-tab');
+        if (explanationTab && explanationTab.classList.contains('active')) {
+            fixAISelectWidth();
+        }
+    }, 300);
+    
+    // 监听窗口大小变化
+    window.addEventListener('resize', () => {
+        setTimeout(fixAISelectWidth, 100);
+    });
 });
 </script>
 {% endblock %}

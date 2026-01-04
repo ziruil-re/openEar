@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}关于 - Earcraft{% endblock %}
+{% block title %}关于 - openEar{% endblock %}
 
 {% block extra_css %}
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
@@ -332,83 +332,13 @@
     <!-- README Header -->
     <div class="readme-header">
         <div class="readme-title">
-            <span style="font-size: 32px;">🎵</span>
-            <h1>Earcraft</h1>
-        </div>
-        
-        <div class="readme-badges">
-            <span class="badge">
-                <svg class="badge-icon" fill="currentColor" viewBox="0 0 16 16">
-                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
-                </svg>
-                Open Source
-            </span>
-            <span class="badge">
-                <span class="badge-icon">🎹</span>
-                Ear Training
-            </span>
-            <span class="badge">
-                <span class="badge-icon">⚡</span>
-                Interactive
-            </span>
-            <span class="badge">
-                <span class="badge-icon">🧠</span>
-                AI-Powered
-            </span>
+            <span style="font-size: 32px;">🎸</span>
+            <h1>openEar</h1>
         </div>
         
         <p class="readme-description">
-            <strong>Earcraft</strong> 是一个基于 <span class="geek-term">Jamey Aebersold</span> 爵士听力训练方法论的交互式学习平台。
-            通过 <span class="geek-term">Flask</span> + <span class="geek-term">Whisper</span> 技术栈，提供五种核心练习模式，帮助音乐学习者提升听力能力。
+            <strong>openEar</strong> 是一个 AI 驱动的交互式听力训练平台，专为进阶乐手和卧室音乐人设计，通过智能化的练习系统帮助提升音感能力。
         </p>
-    </div>
-
-    <!-- Exercise.ME -->
-    <div class="content-section">
-        <h2 class="section-title">
-            <span class="section-title-icon">
-                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M3 6C3 4.89543 3.89543 4 5 4H9.58579C9.851 4 10.1054 4.10536 10.2929 4.29289L12.7071 6.70711C12.8946 6.89464 13.149 7 13.4142 7H19C20.1046 7 21 7.89543 21 9V18C21 19.1046 20.1046 20 19 20H5C3.89543 20 3 19.1046 3 18V6Z" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5"/>
-                </svg>
-            </span>
-            <span>&lt;Exercise.ME&gt;</span>
-        </h2>
-        <ul class="exercises-list">
-            {% for type_key, exercise in exercise_types.items() %}
-            <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-item">
-                <div class="exercise-item-header">
-                    <span class="exercise-item-icon">
-                        {{ exercise.icon }}
-                    </span>
-                    <div class="exercise-item-content">
-                        <span class="exercise-item-name">Earcraft/{{ exercise.name }}</span>
-                        <span class="exercise-item-task">
-                            <span class="exercise-item-task-icon">🎯</span>
-                            <span>{{ exercise.description }}</span>
-                        </span>
-                    </div>
-                </div>
-                <div class="exercise-item-stats">
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">🕐</span>
-                        <span>0 min</span>
-                    </div>
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">🏆</span>
-                        <span>0%</span>
-                    </div>
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">📊</span>
-                        <span>0 次</span>
-                    </div>
-                    <div class="exercise-stat">
-                        <span class="exercise-stat-icon">⭐</span>
-                        <span>初级</span>
-                    </div>
-                </div>
-            </a>
-            {% endfor %}
-        </ul>
     </div>
 
     <!-- READ.ME -->
@@ -423,12 +353,12 @@
         </h2>
         <div class="readme-content">
             <p>
-                <strong>Earcraft</strong> 是一个开源的交互式听力训练平台，旨在帮助音乐学习者通过系统化的练习提升音感能力。
-                本项目基于著名爵士教育家 <strong>Jamey Aebersold</strong> 的《Jazz Ear Training》方法论，结合现代 Web 技术，
+                <strong>openEar</strong> 是一个 AI 驱动的交互式听力训练平台，专为进阶乐手和卧室音乐人设计。
+                本项目基于著名爵士教育家 <strong>Jamey Aebersold</strong> 的《Jazz Ear Training》方法论，结合 AI 技术，
                 提供从基础音程识别到复杂和弦进行的全方位训练。
             </p>
             <p>
-                无论你是爵士乐手、古典音乐学习者，还是想要提升音乐素养的爱好者，<strong>Earcraft</strong> 都能为你提供
+                通过 AI 智能提取和整理的知识库笔记，<strong>openEar</strong> 能够为进阶乐手和卧室音乐人提供
                 个性化的练习方案和实时反馈，让听力训练变得高效而有趣。
             </p>
         </div>
@@ -447,7 +377,7 @@
         <div class="contact-content">
             <p>欢迎反馈、建议和贡献！</p>
             <div class="contact-links">
-                <a href="https://github.com/yourusername/Earcraft" target="_blank" class="contact-link">
+                <a href="https://github.com/ziruil-re/openEar" target="_blank" class="contact-link">
                     <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
                     </svg>

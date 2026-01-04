@@ -129,7 +129,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    justify-content: center;
+    justify-content: flex-start; /* 左对齐 */
 }
 
 /* ========== 答案按钮样式 ========== */
@@ -137,20 +137,19 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 12px 20px;
-    min-height: 44px;
+    padding: 8px 12px;
+    min-height: 36px;
     background: var(--hf-bg);
     border: 2px solid var(--hf-border);
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--hf-text-primary);
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
-    flex: 1;
-    min-width: 120px;
-    max-width: 200px;
+    flex: 0 0 auto;
+    min-width: 60px;
 }
 
 .answer-button:hover:not(:disabled) {

@@ -1,0 +1,591 @@
+{% extends "base.html" %}
+
+{% block title %}今天你听了吗 - openEar{% endblock %}
+
+{% block extra_css %}
+<style>
+.statistics-page {
+    background: var(--bg);
+    min-height: calc(100vh - 56px);
+    padding: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.statistics-header {
+    margin-bottom: 32px;
+}
+
+.statistics-title {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.statistics-title-icon {
+    font-size: 18px;
+}
+
+.total-stats-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    margin-bottom: 32px;
+    text-align: center;
+}
+
+.total-duration {
+    font-size: 56px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+    line-height: 1.2;
+}
+
+.total-duration .number {
+    font-size: 56px;
+    font-weight: 600;
+}
+
+.total-duration .unit {
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--text-secondary);
+    margin: 0 4px;
+}
+
+.total-duration-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 32px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.stat-item:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.stat-value .stat-label {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.stat-value .number {
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.stat-value .unit {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--text-secondary);
+}
+
+.exercise-cards-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.exercise-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.exercise-stat-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+}
+
+.exercise-stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
+}
+
+.exercise-stat-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.exercise-stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.exercise-stat-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.exercise-stat-icon {
+    font-size: 24px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.exercise-stat-name {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.exercise-stat-level {
+    font-size: 16px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 12px;
+    background: var(--primary-light);
+    color: var(--primary);
+}
+
+.exercise-stat-level.level-low {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.exercise-stat-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.exercise-stat-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.exercise-stat-stat-icon {
+    font-size: 14px;
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
+.chart-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 32px;
+}
+
+.chart-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+}
+
+.empty-state-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.empty-state-text {
+    font-size: 14px;
+}
+
+@media (max-width: 768px) {
+    .total-duration {
+        font-size: 42px;
+    }
+    
+    .total-duration .number {
+        font-size: 42px;
+    }
+    
+    .total-duration .unit {
+        font-size: 16px;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+    }
+    
+    .stat-value .stat-label {
+        font-size: 14px;
+    }
+    
+    .stat-value .number {
+        font-size: 28px;
+    }
+    
+    .stat-value .unit {
+        font-size: 14px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .exercise-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="statistics-page">
+    <div class="statistics-header">
+        <h1 class="statistics-title">
+            <span class="statistics-title-icon">👂</span>
+            <span>今天你听了吗</span>
+        </h1>
+    </div>
+
+    <div id="total-stats-section" class="total-stats-section">
+        <div class="loading">加载中...</div>
+    </div>
+
+    <div class="exercise-cards-section">
+        <h2 class="section-title">练习卡片</h2>
+        <div id="exercise-cards-grid" class="exercise-cards-grid">
+            <div class="loading">加载中...</div>
+        </div>
+    </div>
+
+    <div class="chart-section">
+        <h2 class="chart-title">练习时长分布</h2>
+        <div class="chart-container">
+            <canvas id="durationChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// 从后端传递练习类型数据
+window.exerciseTypes = {{ exercise_types | tojson }};
+
+let durationChart = null;
+
+// 格式化时长（秒转小时分钟，数字大，单位小）
+function formatDuration(seconds) {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    if (hours > 0) {
+        return `<span class="number">${hours}</span><span class="unit">小时</span><span class="number">${minutes}</span><span class="unit">分钟</span>`;
+    }
+    return `<span class="number">${minutes}</span><span class="unit">分钟</span>`;
+}
+
+// 格式化日期
+function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// 加载统计数据
+async function loadStatistics() {
+    try {
+        const response = await fetch('/api/statistics');
+        const data = await response.json();
+        
+        if (data.status === 'ok') {
+            renderTotalStats(data);
+            renderExerciseCards(data);
+            renderChart(data);
+        }
+    } catch (error) {
+        console.error('加载统计数据失败:', error);
+    }
+}
+
+// 渲染总统计
+function renderTotalStats(data) {
+    const totalDuration = formatDuration(data.total_duration);
+    const totalQuestions = data.total_questions || 0;
+    const totalCorrect = data.total_correct || 0;
+    const practiceDays = data.practice_days || 0;
+    const notesCount = 0; // 暂时为0
+    
+    // 计算开始日期
+    let startDate = '';
+    if (data.daily_stats && data.daily_stats.length > 0) {
+        const lastDate = data.daily_stats[data.daily_stats.length - 1].date;
+        startDate = formatDate(lastDate);
+    }
+    
+    const daysSinceStart = data.daily_stats ? data.daily_stats.length : 0;
+    
+    const html = `
+        <div class="total-duration">${totalDuration}</div>
+        ${startDate ? `<div class="total-duration-subtitle">${startDate}至今 · 与openEar相伴${daysSinceStart}天</div>` : ''}
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value">
+                    <span class="stat-label">听过</span>
+                    <span class="number">${totalQuestions}</span><span class="unit">题</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">
+                    <span class="stat-label">答对</span>
+                    <span class="number">${totalCorrect}</span><span class="unit">题</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">
+                    <span class="stat-label">练习</span>
+                    <span class="number">${practiceDays}</span><span class="unit">天</span>
+                </div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">
+                    <span class="stat-label">笔记</span>
+                    <span class="number">${notesCount}</span><span class="unit">条</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('total-stats-section').innerHTML = html;
+}
+
+// 渲染练习卡片（按主页顺序）
+function renderExerciseCards(data) {
+    const exerciseTypes = window.exerciseTypes || {};
+    const exerciseStats = data.exercise_stats || {};
+    
+    // 按照主页的顺序：interval, scale_degree, chord_quality, chord_inversion, chord_progression, melody
+    const exerciseOrder = ['interval', 'scale_degree', 'chord_quality', 'chord_inversion', 'chord_progression', 'melody'];
+    
+    let html = '';
+    
+    for (const key of exerciseOrder) {
+        const info = exerciseTypes[key];
+        if (!info) continue;
+        
+        const stats = exerciseStats[key] || {
+            duration: 0,
+            total_questions: 0,
+            accuracy: 0,
+            practice_count: 0
+        };
+        
+        const durationMinutes = Math.floor(stats.duration / 60);
+        const durationHours = Math.floor(durationMinutes / 60);
+        const durationMinutesRemainder = durationMinutes % 60;
+        const durationText = durationHours > 0 
+            ? `${durationHours}小时${durationMinutesRemainder}分钟`
+            : `${durationMinutes}分钟`;
+        
+        const accuracy = stats.accuracy || 0;
+        const level = getAccuracyLevel(accuracy);
+        const practiceCount = stats.practice_count || 0;
+        
+        // 低于C显示红色
+        const levelClass = (level === 'D' || level === 'E') ? 'level-low' : '';
+        
+        html += `
+            <div class="exercise-stat-card">
+                <div class="exercise-stat-header">
+                    <div class="exercise-stat-icon">${info.icon}</div>
+                    <div class="exercise-stat-name">${info.name}</div>
+                    <div class="exercise-stat-level ${levelClass}">${level}</div>
+                </div>
+                <div class="exercise-stat-stats">
+                    <div class="exercise-stat-stat">
+                        <span class="exercise-stat-stat-icon">🕐</span>
+                        <span>${durationText}</span>
+                    </div>
+                    <div class="exercise-stat-stat">
+                        <span class="exercise-stat-stat-icon">🏆</span>
+                        <span>${accuracy.toFixed(0)}%</span>
+                    </div>
+                    <div class="exercise-stat-stat">
+                        <span class="exercise-stat-stat-icon">📊</span>
+                        <span>${practiceCount} 次</span>
+                    </div>
+                    <div class="exercise-stat-stat">
+                        <span class="exercise-stat-stat-icon">⭐</span>
+                        <span>${stats.total_questions} 题</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (html === '') {
+        html = '<div class="empty-state"><div class="empty-state-icon">📊</div><div class="empty-state-text">暂无练习数据</div></div>';
+    }
+    
+    document.getElementById('exercise-cards-grid').innerHTML = html;
+}
+
+// 获取准确率等级
+function getAccuracyLevel(accuracy) {
+    if (accuracy >= 80) return 'A';
+    if (accuracy >= 60) return 'B';
+    if (accuracy >= 40) return 'C';
+    if (accuracy >= 20) return 'D';
+    return 'E';
+}
+
+// 渲染图表（按周显示）
+function renderChart(data) {
+    const ctx = document.getElementById('durationChart').getContext('2d');
+    
+    // 使用周数据
+    const chartData = data.weekly_stats || [];
+    
+    // 转换为图表格式（按周排序，最新的在前）
+    const sortedData = chartData.sort((a, b) => a.period.localeCompare(b.period));
+    
+    // 格式化周标签（如 "2025-W52" -> "2025年第52周"）
+    const labels = sortedData.map(item => {
+        const [year, week] = item.period.split('-W');
+        return `${year}年第${parseInt(week)}周`;
+    });
+    
+    // 转换为小时
+    const durations = sortedData.map(item => Math.round(item.duration / 3600 * 100) / 100);
+    
+    // 如果已有图表，销毁它
+    if (durationChart) {
+        durationChart.destroy();
+    }
+    
+    // 找到最大值用于设置Y轴
+    const maxDuration = Math.max(...durations, 0);
+    const yAxisMax = Math.ceil(maxDuration / 10) * 10; // 向上取整到10的倍数
+    
+    durationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: '练习时长（小时）',
+                data: durations,
+                backgroundColor: 'rgba(59, 130, 246, 0.6)',
+                borderColor: 'rgba(59, 130, 246, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const hours = Math.floor(context.parsed.y);
+                            const minutes = Math.round((context.parsed.y - hours) * 60);
+                            if (hours > 0) {
+                                return `${hours}小时${minutes}分钟`;
+                            }
+                            return `${minutes}分钟`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: yAxisMax > 0 ? yAxisMax : 10,
+                    ticks: {
+                        callback: function(value) {
+                            return value + 'h';
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 0
+                    }
+                }
+            }
+        }
+    });
+}
+
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', () => {
+    loadStatistics();
+});
+</script>
+{% endblock %}

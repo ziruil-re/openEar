@@ -36,6 +36,7 @@ class Question(db.Model):
     exercise_type = db.Column(db.String(20), nullable=False)
     question_data = db.Column(db.Text)  # JSON格式存储题目数据
     correct_answer = db.Column(db.String(100), nullable=False)
+    sub_item = db.Column(db.String(100))  # 细分项，如音程练习中的"小二度"、"大二度"等
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class UserAnswer(db.Model):
