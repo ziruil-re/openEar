@@ -1,0 +1,425 @@
+/* 练习页面 UI 样式 */
+
+/* ========== 练习内容容器 ========== */
+.exercise-content-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 500px;
+    gap: 16px;
+}
+
+/* 如果没有 exercise-content-container，直接应用到 main-practice-area */
+.main-practice-area {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 20px;
+}
+
+/* 确保统计信息在顶部 */
+.exercise-stats-section {
+    order: -1;
+}
+
+.exercise-stats-container {
+    order: -1;
+}
+
+.exercise-info {
+    order: -1;
+}
+
+/* ========== 统计信息区域 ========== */
+.exercise-stats-section {
+    margin-bottom: 8px;
+}
+
+.exercise-stats-container {
+    font-size: 14px;
+    color: var(--hf-text-secondary);
+    margin: 0;
+    padding: 8px 0;
+    font-weight: 500;
+}
+
+.exercise-stats-container span {
+    color: var(--hf-text-primary);
+    font-weight: 600;
+}
+
+.exercise-info {
+    font-size: 13px;
+    color: var(--hf-text-secondary);
+    margin: 8px 0 0 0;
+    padding: 8px 12px;
+    background: var(--hf-bg-secondary);
+    border-radius: var(--hf-radius);
+    border: 1px solid var(--hf-border);
+}
+
+/* ========== 答案指示区域 ========== */
+.exercise-answers-indication-container {
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 16px 0;
+}
+
+.answer-indication {
+    min-width: 80px;
+    max-width: 200px;
+    height: 80px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 12px;
+    text-align: center;
+    background: var(--hf-bg-secondary);
+    border: 2px solid var(--hf-border);
+    transition: all 0.3s ease;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--hf-text-primary);
+}
+
+.answer-indication.--focused {
+    border: 4px solid #c6ddff;
+    background: #f0f7ff;
+    box-shadow: 0 0 0 4px rgba(198, 221, 255, 0.2);
+}
+
+.answer-indication.--wrong {
+    color: var(--hf-danger);
+    border-color: var(--hf-danger);
+    background: #fef2f2;
+}
+
+.answer-indication .answer {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--hf-text-primary);
+}
+
+.answer-indication .no-answer {
+    opacity: 0.5;
+    font-size: 32px;
+    font-weight: 300;
+}
+
+/* ========== 答案按钮布局 ========== */
+.exercise-answers-layout {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 200px;
+    padding: 8px 0;
+}
+
+.answers-layout-rows-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.answers-layout-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+/* ========== 答案按钮样式 ========== */
+.answer-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 20px;
+    min-height: 44px;
+    background: var(--hf-bg);
+    border: 2px solid var(--hf-border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--hf-text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    flex: 1;
+    min-width: 120px;
+    max-width: 200px;
+}
+
+.answer-button:hover:not(:disabled) {
+    background: var(--hf-bg-secondary);
+    border-color: var(--hf-primary);
+    color: var(--hf-primary);
+    transform: translateY(-1px);
+    box-shadow: var(--hf-shadow-md);
+}
+
+.answer-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: var(--hf-shadow-sm);
+}
+
+.answer-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 正确答案状态（绿色） */
+.answer-button.--right {
+    background: #2dd36f;
+    border-color: #28ba62;
+    color: white;
+    animation: correctPulse 0.3s ease;
+}
+
+/* 错误答案状态（红色） */
+.answer-button.--wrong {
+    background: #eb445a;
+    border-color: #cf3c4f;
+    color: white;
+    animation: incorrectShake 0.4s ease;
+}
+
+/* 高亮状态（蓝色边框） */
+.answer-button.--highlighted {
+    border-color: rgba(0, 0, 0, 0.2);
+    border-width: 4px;
+    background: var(--hf-primary-light);
+    transition: border-color 0.1s ease, border-width 0.1s ease;
+}
+
+.answer-button.--highlighted:not(.--right):not(.--wrong) {
+    border-color: var(--hf-primary);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* 动画 */
+@keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes incorrectShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+}
+
+/* ========== 操作按钮区域 ========== */
+.exercise-actions-container {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: 8px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 16px;
+    min-height: 40px;
+    min-width: 90px;
+    background: var(--hf-bg);
+    border: 1px solid var(--hf-border);
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--hf-text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.action-btn:hover:not(:disabled) {
+    background: var(--hf-bg-secondary);
+    border-color: var(--hf-primary);
+    color: var(--hf-primary);
+}
+
+.action-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.action-btn-primary {
+    background: var(--hf-primary);
+    border-color: var(--hf-primary);
+    color: white;
+}
+
+.action-btn-primary:hover:not(:disabled) {
+    background: var(--hf-primary-hover);
+    border-color: var(--hf-primary-hover);
+    color: white;
+}
+
+.action-icon {
+    font-size: 18px;
+}
+
+.action-text {
+    font-weight: 500;
+}
+
+/* ========== 题目区域优化 ========== */
+.question-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    padding: 20px;
+    background: var(--hf-bg-secondary);
+    border-radius: var(--hf-radius);
+    border: 1px solid var(--hf-border);
+}
+
+.audio-player-container {
+    width: 100%;
+    max-width: 600px;
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.audio-player-container h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--hf-text-primary);
+}
+
+.audio-player-container audio {
+    width: 100%;
+    max-width: 500px;
+    margin-bottom: 12px;
+}
+
+.play-audio-btn {
+    padding: 10px 20px;
+    background: var(--hf-primary);
+    color: white;
+    border: none;
+    border-radius: var(--hf-radius);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.play-audio-btn:hover {
+    background: var(--hf-primary-hover);
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: var(--hf-shadow-md);
+}
+
+.play-audio-btn:hover * {
+    color: white;
+}
+
+/* ========== 响应式设计 ========== */
+@media (max-width: 768px) {
+    .exercise-content-container {
+        min-height: auto;
+        gap: 12px;
+    }
+
+    .exercise-answers-indication-container {
+        min-height: 60px;
+        margin: 12px 0;
+    }
+
+    .answer-indication {
+        min-width: 60px;
+        max-width: 150px;
+        height: 60px;
+        font-size: 20px;
+    }
+
+    .answer-indication .no-answer {
+        font-size: 24px;
+    }
+
+    .exercise-answers-layout {
+        min-height: 150px;
+        padding: 12px 0 0 0;
+    }
+
+    .answer-button {
+        min-width: 100px;
+        max-width: 150px;
+        padding: 10px 16px;
+        font-size: 13px;
+    }
+
+    .answers-layout-row {
+        gap: 6px;
+    }
+
+    .exercise-actions-container {
+        margin-top: 8px;
+        gap: 8px;
+        justify-content: flex-end;
+    }
+
+    .action-btn {
+        min-width: 90px;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .action-icon {
+        font-size: 16px;
+    }
+    
+    .action-btn-primary .action-text {
+        font-size: 13px;
+    }
+
+    .question-area {
+        min-height: 150px;
+        padding: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .answer-button {
+        min-width: calc(50% - 4px);
+        max-width: none;
+    }
+
+    .exercise-actions-container {
+        gap: 8px;
+        justify-content: flex-end;
+    }
+    
+    .action-btn {
+        min-width: 90px;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .action-icon {
+        font-size: 16px;
+    }
+    
+    .action-btn .action-text {
+        font-size: 13px;
+    }
+}
+

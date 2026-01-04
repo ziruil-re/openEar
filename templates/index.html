@@ -1,722 +1,326 @@
 {% extends "base.html" %}
 
-{% block title %}Earcraft - 交互式听力训练{% endblock %}
+{% block title %}openEar - 交互式听力训练{% endblock %}
 
 {% block extra_css %}
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=IBM+Plex+Mono:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-/* Minecraft 主菜单样式 */
-.minecraft-menu {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    overflow: hidden;
+/* 主页样式 - 豆瓣风格极简设计 */
+.homepage {
+    background: var(--bg);
+    min-height: calc(100vh - 56px);
+    padding: 20px 20px 40px;
 }
 
-/* Minecraft 背景 */
-.minecraft-menu-background {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url("{{ url_for('static', filename='images/minecrafts/background/image copy 2.png') }}");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    z-index: -1;
-    filter: brightness(1.2) contrast(1.1);
-}
-
-.minecraft-menu-background::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.1);
-    z-index: 0;
-}
-
-/* 主内容容器 */
-.minecraft-menu-content {
-    position: relative;
-    width: 100%;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 80px 40px 40px;
-    z-index: 1;
-}
-
-.readme-container {
-    max-width: 1012px;
+.homepage-container {
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 32px 24px;
 }
 
-.readme-header {
-    border-bottom: 1px solid var(--hf-border);
-    padding-bottom: 24px;
-    margin-bottom: 32px;
-}
-
-.readme-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    width: 100%;
-}
-
-.readme-title h1 {
-    font-size: 32px;
-    font-weight: 600;
-    color: var(--hf-text-primary);
-    letter-spacing: -0.03em;
-    margin: 0;
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-}
-
-/* Minecraft 背景 - 左右唱片装饰 */
-.minecraft-background {
-    position: relative;
-    background: transparent;
-    padding: 100px 180px;
-    border-radius: 16px;
-    overflow: visible;
-    margin-bottom: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
-}
-
-/* 左右唱片装饰容器 - 一排 */
-.disc-decoration {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    opacity: 0.5;
-    pointer-events: none;
-    z-index: 0;
-}
-
-.disc-decoration.left {
-    left: 20px;
-}
-
-.disc-decoration.right {
-    right: 20px;
-}
-
-.disc-decoration img {
-    width: 60px;
-    height: 60px;
-    image-rendering: pixelated;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-/* 标题区域 */
-.minecraft-title-area {
-    text-align: center;
+/* 练习卡片网格 */
+.exercise-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
     margin-bottom: 60px;
-    position: relative;
 }
 
-.minecraft-main-title {
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-size: 140px;
-    font-weight: 900;
-    color: #c0c0c0;
-    text-shadow: 
-        6px 6px 0px #000000,
-        7px 7px 0px #000000,
-        8px 8px 0px #000000,
-        9px 9px 0px #000000,
-        10px 10px 0px #000000,
-        4px 4px 0px #808080,
-        0px 0px 30px rgba(0, 0, 0, 0.7);
-    letter-spacing: 14px;
-    text-transform: uppercase;
-    position: relative;
-    display: inline-block;
-    transform: perspective(1000px) rotateX(20deg) rotateY(-8deg) scaleY(1.25);
-    background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 20%, #c0c0c0 40%, #a0a0a0 60%, #808080 80%, #606060 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.7));
-    line-height: 1.1;
-    margin: 0 0 10px 0;
-    transform-style: preserve-3d;
-}
-
-.minecraft-subtitle {
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-size: 32px;
-    font-weight: 700;
-    color: #808080;
-    text-shadow: 
-        2px 2px 0px #000000,
-        3px 3px 0px #000000,
-        0px 0px 10px rgba(0, 0, 0, 0.5);
-    letter-spacing: 4px;
-    text-transform: uppercase;
-    margin: 0;
-    transform: perspective(600px) rotateX(15deg) rotateY(-5deg);
-}
-
-/* Splash Text */
-.minecraft-splash {
-    position: absolute;
-    top: -10px;
-    right: 10px;
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    color: #FFD700;
-    text-shadow: 
-        2px 2px 0px #000000,
-        3px 3px 0px #000000,
-        0px 0px 8px rgba(0, 0, 0, 0.6);
-    transform: rotate(12deg);
-    white-space: nowrap;
-    z-index: 10;
-    max-width: 120px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* 菜单按钮 */
-.minecraft-menu-buttons {
+.exercise-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.2s ease;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    width: 100%;
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.minecraft-button {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    background: #c0c0c0;
-    border: 3px solid #000000;
-    border-top-color: #ffffff;
-    border-left-color: #ffffff;
-    border-bottom-color: #404040;
-    border-right-color: #404040;
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-size: 18px;
-    font-weight: 600;
-    color: #000000;
-    text-decoration: none;
-    text-align: left;
-    cursor: pointer;
-    transition: all 0.1s ease;
-    image-rendering: pixelated;
-    box-shadow: 
-        inset 2px 2px 0px rgba(255, 255, 255, 0.5),
-        inset -2px -2px 0px rgba(0, 0, 0, 0.3);
-}
-
-.minecraft-button:hover {
-    background: #d0d0d0;
-    border-top-color: #f0f0f0;
-    border-left-color: #f0f0f0;
-    border-bottom-color: #303030;
-    border-right-color: #303030;
-    transform: translateY(-1px);
-    box-shadow: 
-        inset 2px 2px 0px rgba(255, 255, 255, 0.6),
-        inset -2px -2px 0px rgba(0, 0, 0, 0.4),
-        0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.minecraft-button:active {
-    background: #b0b0b0;
-    border-top-color: #404040;
-    border-left-color: #404040;
-    border-bottom-color: #ffffff;
-    border-right-color: #ffffff;
-    transform: translateY(0px);
-    box-shadow: 
-        inset -2px -2px 0px rgba(255, 255, 255, 0.3),
-        inset 2px 2px 0px rgba(0, 0, 0, 0.5);
-}
-
-.button-icon {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-}
-
-.button-icon img {
-    width: 100%;
-    height: 100%;
-    image-rendering: pixelated;
-}
-
-.button-text {
-    flex: 1;
-}
-
-/* 底部信息 */
-.minecraft-footer {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0 40px;
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-size: 14px;
-    color: #ffffff;
-    text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
-    z-index: 10;
-}
-
-.minecraft-version {
-    font-weight: 600;
-}
-
-.minecraft-copyright {
-    font-weight: 400;
-}
-
-@media (max-width: 768px) {
-    /* 移动端优化 */
-    .minecraft-menu-content {
-        padding: 60px 20px 40px;
-        min-height: 100vh;
-    }
-    
-    .minecraft-main-title {
-        font-size: 60px !important;
-        letter-spacing: 4px !important;
-        transform: perspective(800px) rotateX(15deg) rotateY(-5deg) scaleY(1.1) !important;
-        margin-bottom: 20px;
-    }
-    
-    .minecraft-subtitle {
-        font-size: 18px !important;
-        letter-spacing: 2px !important;
-        transform: perspective(400px) rotateX(10deg) rotateY(-3deg) !important;
-    }
-    
-    .minecraft-splash {
-        font-size: 14px !important;
-        top: -5px;
-        right: 5px;
-        transform: rotate(10deg) !important;
-        max-width: 80px;
-    }
-    
-    .minecraft-menu-buttons {
-        max-width: 100%;
-        gap: 6px;
-    }
-    
-    .minecraft-button {
-        padding: 12px 16px;
-        font-size: 14px;
-        gap: 10px;
-    }
-    
-    .button-icon {
-        width: 24px;
-        height: 24px;
-    }
-    
-    .disc-decoration {
-        display: none; /* 移动端隐藏唱片装饰 */
-    }
-    
-    .minecraft-footer {
-        position: relative;
-        bottom: auto;
-        flex-direction: column;
-        gap: 8px;
-        padding: 20px;
-        font-size: 12px;
-        text-align: center;
-    }
-    
-    .minecraft-title-area {
-        margin-bottom: 40px;
-    }
-}
-
-.readme-badges {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin: 16px 0;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    background: var(--hf-bg-secondary);
-    border: 1px solid var(--hf-border);
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--hf-text-secondary);
-    text-decoration: none;
-    transition: all 0.15s ease;
-    font-family: 'IBM Plex Mono', monospace;
-}
-
-.badge:hover {
-    background: var(--hf-bg-tertiary);
-    border-color: var(--hf-accent);
-    color: var(--hf-accent);
-}
-
-.badge-icon {
-    width: 14px;
-    height: 14px;
-}
-
-.readme-description {
-    font-size: 16px;
-    color: var(--hf-text-secondary);
-    line-height: 1.6;
-    margin: 16px 0;
-    font-family: 'Nunito', sans-serif;
-}
-
-/* 内容区块样式 - 浮窗效果 */
-.content-section {
-    background: var(--hf-bg);
-    border: 1px solid var(--hf-border);
-    border-radius: 16px;
-    padding: 28px;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-    transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-.content-section::before {
+.exercise-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--hf-accent), #60a5fa, var(--hf-accent));
-    opacity: 0.7;
+    background: var(--primary);
+    transform: scaleX(0);
+    transition: transform 0.2s ease;
 }
 
-.content-section:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+.exercise-card:hover {
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
 
-.section-title {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--hf-text-primary);
-    margin-bottom: 20px;
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    letter-spacing: 0.02em;
-    display: flex;
-    align-items: center;
-    gap: 10px;
+.exercise-card:hover::before {
+    transform: scaleX(1);
 }
 
-.section-title-icon {
-    width: 20px;
-    height: 20px;
-    display: inline-flex;
+.exercise-card-header {
+    display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.exercise-card-icon {
+    font-size: 24px;
+    line-height: 1;
     flex-shrink: 0;
 }
 
-.section-title-icon svg {
-    width: 100%;
-    height: 100%;
-    transform: none;
+.exercise-card-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.4;
 }
 
-/* Exercise.ME 部分 */
-.exercises-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.exercise-item {
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    background: var(--hf-bg);
-    border: 1px solid var(--hf-border);
-    border-radius: 12px;
-    text-decoration: none;
-    color: var(--hf-text-primary);
-    transition: all 0.2s ease;
-    gap: 12px;
-}
-
-.exercise-item:hover {
-    border-color: var(--hf-accent);
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
-}
-
-.exercise-item-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.exercise-item-icon {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    filter: none;
-    opacity: 1;
-}
-
-.exercise-item-icon img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    image-rendering: pixelated; /* Minecraft像素风格 */
-}
-
-.exercise-item-content {
-    flex: 1;
-    min-width: 0;
-}
-
-.exercise-item-name {
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--hf-text-primary);
-    margin-bottom: 4px;
-    display: block;
-}
-
-.exercise-item-task {
-    font-family: 'Nunito', sans-serif;
-    font-size: 13px;
-    color: var(--hf-text-secondary);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.exercise-item-task-icon {
+.exercise-card-description {
     font-size: 14px;
-    opacity: 0.7;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 12px;
+    flex: 1;
 }
 
-.exercise-item-stats {
+.exercise-card-category {
+    display: inline-block;
+    font-size: 12px;
+    color: var(--primary);
+    padding: 4px 10px;
+    background: var(--primary-light);
+    border-radius: 12px;
+    margin-bottom: 12px;
+}
+
+/* 统计信息区域 */
+.exercise-card-stats {
     display: flex;
     align-items: center;
     gap: 16px;
     font-size: 12px;
-    color: var(--hf-text-tertiary);
-    font-family: 'Nunito', sans-serif;
+    color: var(--text-tertiary);
     padding-top: 12px;
-    border-top: 1px solid var(--hf-border);
+    border-top: 1px solid var(--border);
     flex-wrap: wrap;
+    margin-top: auto;
 }
 
-.exercise-stat {
+.exercise-card-stat {
     display: flex;
     align-items: center;
     gap: 4px;
 }
 
-.exercise-stat-icon {
+.exercise-card-stat-icon {
     font-size: 14px;
     filter: grayscale(100%);
     opacity: 0.7;
 }
 
-/* READ.ME 部分 */
-.readme-content {
-    font-size: 15px;
-    color: var(--hf-text-secondary);
-    line-height: 1.8;
-    font-family: 'Nunito', sans-serif;
+/* 统计信息区域 */
+.exercise-card-stats {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    margin-top: auto;
 }
 
-.readme-content p {
+.exercise-card-stat {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.exercise-card-stat-icon {
+    font-size: 14px;
+    filter: grayscale(100%);
+    opacity: 0.7;
+}
+
+/* 介绍区域 */
+.intro-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 40px;
+}
+
+.intro-section-title {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+}
+
+.intro-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.8;
     margin-bottom: 16px;
 }
 
-.readme-content strong {
-    color: var(--hf-text-primary);
-    font-weight: 600;
+.intro-text strong {
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
-/* Contact.ME 部分 */
-.contact-content {
+.intro-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+}
+
+.intro-feature {
+    padding: 16px;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+}
+
+.intro-feature-title {
     font-size: 15px;
-    color: var(--hf-text-secondary);
-    line-height: 1.8;
-    font-family: 'Nunito', sans-serif;
-}
-
-.contact-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-top: 16px;
-}
-
-.contact-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: var(--hf-bg-secondary);
-    border: 1px solid var(--hf-border);
-    border-radius: 10px;
-    text-decoration: none;
-    color: var(--hf-text-primary);
-    font-size: 14px;
     font-weight: 500;
-    transition: all 0.2s ease;
-    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text-primary);
+    margin-bottom: 8px;
 }
 
-.contact-link:hover {
-    background: var(--hf-accent-light);
-    border-color: var(--hf-accent);
-    color: var(--hf-accent);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+.intro-feature-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.6;
 }
 
-.geek-term {
-    font-family: 'JetBrains Mono', 'Space Mono', monospace;
-    background: var(--hf-bg-secondary);
-    padding: 2px 6px;
-    border-radius: 3px;
-    font-size: 12px;
-    color: var(--hf-accent);
-    font-weight: 500;
-}
-
+/* 响应式设计 */
 @media (max-width: 768px) {
-    .minecraft-main-title {
-        font-size: 80px;
-        letter-spacing: 8px;
-        transform: perspective(800px) rotateX(18deg) rotateY(-6deg) scaleY(1.2);
+    .homepage {
+        padding: 16px 16px 32px;
     }
     
-    .minecraft-subtitle {
-        font-size: 20px;
-        letter-spacing: 2px;
-    }
-    
-    .minecraft-splash {
-        font-size: 18px;
-        top: -10px;
-        right: -50px;
-        transform: rotate(12deg);
-    }
-    
-    .minecraft-menu-content {
-        padding: 60px 20px 40px;
-    }
-    
-    .minecraft-menu-buttons {
-        max-width: 100%;
-    }
-    
-    .minecraft-button {
-        font-size: 16px;
-        padding: 12px 16px;
-    }
-    
-    .minecraft-footer {
-        flex-direction: column;
-        gap: 8px;
-        text-align: center;
-        font-size: 12px;
-    }
-    
-    .readme-container {
-        padding: 24px 16px;
-    }
-    
-    .content-section {
-        padding: 20px;
-    }
-    
-    .exercise-item-stats {
+    .exercise-cards {
+        grid-template-columns: 1fr;
         gap: 12px;
+        margin-bottom: 40px;
+    }
+    
+    .exercise-card {
+        padding: 16px;
+    }
+    
+    .exercise-card-header {
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    
+    .exercise-card-icon {
+        font-size: 20px;
+    }
+    
+    .exercise-card-title {
+        font-size: 16px;
+    }
+    
+    .intro-section {
+        padding: 24px 20px;
+    }
+    
+    .intro-features {
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="minecraft-menu">
-    <!-- Minecraft 风格背景 -->
-    <div class="minecraft-menu-background"></div>
-    
-    <!-- 主内容 -->
-    <div class="minecraft-menu-content">
-        <!-- 标题区域 -->
-        <div class="minecraft-title-area">
-            <h1 class="minecraft-main-title">Earcraft</h1>
-            <h2 class="minecraft-subtitle">EAR TRAINING EDITION</h2>
-            <!-- Splash Text -->
-            <div class="minecraft-splash">practice!</div>
-        </div>
-        
-        <!-- 菜单按钮区域 -->
-        <div class="minecraft-menu-buttons">
+<div class="homepage">
+    <div class="homepage-container">
+        <!-- 练习卡片 -->
+        <div class="exercise-cards">
             {% for type_key, exercise in exercise_types.items() %}
-            <a href="{{ url_for('practice', exercise_type=type_key) }}" class="minecraft-button">
-                <span class="button-icon">
-                    {% if exercise.icon.startswith('minecrafts/') or exercise.icon.startswith('minecraft/') %}
-                        <img src="{{ url_for('static', filename='images/' + exercise.icon) }}" alt="{{ exercise.name }}" onerror="this.style.display='none';">
-                    {% endif %}
-                </span>
-                <span class="button-text">{{ exercise.category }}：{{ exercise.name }}</span>
+            <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-card">
+                <div class="exercise-card-header">
+                    <div class="exercise-card-icon">
+                        {{ exercise.icon }}
+                    </div>
+                    <div class="exercise-card-title">{{ exercise.name }}</div>
+                </div>
+                <div class="exercise-card-description">{{ exercise.description }}</div>
+                <div class="exercise-card-category">{{ exercise.category }}</div>
+                {% set stats = exercise_stats.get(type_key, {'duration_minutes': 0, 'accuracy': 0, 'practice_count': 0, 'level': 'E'}) %}
+                <div class="exercise-card-stats">
+                    <div class="exercise-card-stat">
+                        <span class="exercise-card-stat-icon">🕐</span>
+                        <span>{{ stats.duration_minutes }} min</span>
+                    </div>
+                    <div class="exercise-card-stat">
+                        <span class="exercise-card-stat-icon">🏆</span>
+                        <span>{{ "%.0f"|format(stats.accuracy) }}%</span>
+                    </div>
+                    <div class="exercise-card-stat">
+                        <span class="exercise-card-stat-icon">📊</span>
+                        <span>{{ stats.practice_count }} 次</span>
+                    </div>
+                    <div class="exercise-card-stat">
+                        <span class="exercise-card-stat-icon">⭐</span>
+                        <span>{{ stats.level }}</span>
+                    </div>
+                </div>
             </a>
             {% endfor %}
         </div>
         
-        <!-- 底部信息 -->
-        <div class="minecraft-footer">
-            <div class="minecraft-version">Earcraft 1.0.0</div>
-            <div class="minecraft-copyright">© 2025 Earcraft - 交互式听力训练平台</div>
+        <!-- 介绍区域 -->
+        <div class="intro-section">
+            <h2 class="intro-section-title">如何使用</h2>
+            <div class="intro-text">
+                openEar 是一个交互式音乐听力训练平台，帮助你提升音乐技能。以下是如何更好地使用这个平台：
+            </div>
+            <div class="intro-text">
+                <strong>开始练习：</strong>点击上方的练习卡片进入对应的训练模式。每个练习类型都专注于不同的音乐技能，建议从音程识别开始，这是听力训练的基础。
+            </div>
+            <div class="intro-text">
+                <strong>使用知识库笔记（AI智能整理）：</strong>在练习页面的"说明"标签中，你可以查看由AI从视频转录中智能提取和整理的笔记内容。这些笔记不仅包含每个音程/音阶的详细特点，还自动提取了参考歌曲、具体应用例子（甚至包括在歌曲中的具体位置，如"开头"、"副歌"等），让学习更加生动和实用。
+            </div>
+            <div class="intro-text">
+                <strong>参考歌曲：</strong>在"歌单"标签中，你可以找到与当前练习相关的参考歌曲。这些歌曲可以帮助你建立音程/音阶的听觉记忆。
+            </div>
+            <div class="intro-text">
+                <strong>渐进式学习：</strong>建议按照难度顺序进行练习：先掌握基础音程（小二度、大二度等），再学习音阶，最后挑战和弦和旋律。
+            </div>
+            
+            <div class="intro-features">
+                <div class="intro-feature">
+                    <div class="intro-feature-title">🎵 音程训练</div>
+                    <div class="intro-feature-desc">识别两个音符之间的音程关系，从同度到八度，逐步建立音高感知能力。</div>
+                </div>
+                <div class="intro-feature">
+                    <div class="intro-feature-title">🎹 音阶练习</div>
+                    <div class="intro-feature-desc">掌握音阶中的各个音级，理解音阶结构，提升音阶识别能力。</div>
+                </div>
+                <div class="intro-feature">
+                    <div class="intro-feature-title">🎼 和弦识别</div>
+                    <div class="intro-feature-desc">学习识别不同类型的和弦，理解和弦的构成和性质。</div>
+                </div>
+                <div class="intro-feature">
+                    <div class="intro-feature-title">🎶 旋律训练</div>
+                    <div class="intro-feature-desc">通过旋律片段练习，提升整体音乐感知和记忆能力。</div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

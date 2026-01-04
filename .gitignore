@@ -90,3 +90,18 @@ htmlcov/
 .dmypy.json
 dmypy.json
 
+# Cursor IDE
+.cursor/
+
+# Knowledge base
+knowledge_base/
+
+# Audio songs
+static/audio/songs/
+
+# Scripts
+scripts/
+
+# Images
+static/images/
+

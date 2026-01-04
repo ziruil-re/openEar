@@ -4,20 +4,75 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/practice.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/exercise-openear-style.css') }}">
 {% endblock %}
 
 {% block content %}
 <div class="practice-layout">
-    <!-- 左侧边栏 -->
+    <!-- 主练习区域 -->
+    <main class="main-practice-area">
+        <div class="practice-header">
+            <div class="practice-header-title-row">
+                <span style="font-size: 24px;">{{ exercise_info.icon }}</span>
+                <h1 style="margin: 0; display: inline-block;">{{ exercise_info.name }}</h1>
+                <span class="geek-badge" style="font-size: 11px; padding: 4px 8px; background: var(--hf-primary-light); color: var(--hf-primary); border-radius: 12px; font-weight: 500; margin-left: 8px;">
+                    {{ exercise_info.name_en }}
+                </span>
+            </div>
+            <p style="margin-top: 8px; margin-bottom: 0;">{{ exercise_info.description }}</p>
+        </div>
+
+        {% if not current_user.is_authenticated %}
+        <div class="auth-notice">
+            <p>⚠️ 您当前未登录，练习记录不会被保存到数据库。 <a href="{{ url_for('login') }}">登录</a>后可保存统计信息和练习历史。</p>
+        </div>
+        {% endif %}
+        
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-label">进度</span>
+                <span class="stat-value" id="progress">0/20</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">得分</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">准确率</span>
+                <span class="stat-value" id="accuracy">0%</span>
+            </div>
+        </div>
+
+        <div class="question-area" id="question-area">
+            <div class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>正在加载题目...</p>
+            </div>
+        </div>
+
+        <!-- 答案按钮区域 -->
+        <div class="exercise-answers-layout" id="answers-layout">
+            <!-- 答案按钮将动态插入这里 -->
+            <!-- 操作按钮区域 -->
+            <div class="exercise-actions-container">
+                <button class="action-btn" id="btn-repeat" disabled>
+                    <span class="action-icon">🔄</span>
+                    <span class="action-text">重复</span>
+                </button>
+                <button class="action-btn action-btn-primary" id="btn-next" disabled>
+                    <span class="action-text">下一题</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 右侧边栏 -->
     <aside class="sidebar" id="sidebar">
+        <div class="sidebar-resizer" id="sidebar-resizer"></div>
         <div class="sidebar-header">
-            <button class="sidebar-toggle" id="sidebar-toggle" title="收起/展开侧边栏">
-                <span class="toggle-icon">◀</span>
-            </button>
             <div class="sidebar-tabs">
-                <button class="sidebar-tab active" data-tab="settings">设置</button>
-                <button class="sidebar-tab" data-tab="explanation">说明</button>
-                <button class="sidebar-tab" data-tab="listen">歌单</button>
+                <button class="sidebar-tab active" data-tab="settings">⚙️ 设置</button>
+                <button class="sidebar-tab" data-tab="explanation">💡 AI秘籍</button>
             </div>
         </div>
 
@@ -25,7 +80,7 @@
             <!-- Settings 标签页 -->
             <div class="tab-content active" id="settings-tab">
                 <div class="sidebar-section">
-                    <h3>练习设置</h3>
+                    <h3>设置</h3>
                     <form id="settings-form" class="settings-form">
                         {% if exercise_type == 'interval' %}
                         <div class="form-group">
@@ -115,105 +170,476 @@
             <!-- Explanation 标签页 -->
             <div class="tab-content" id="explanation-tab">
                 <div class="sidebar-section">
-                    <h3>📖 练习说明</h3>
-                    {% if tips.explanation %}
-                    <div class="explanation-content">
-                        {{ tips.explanation | safe }}
-                    </div>
-                    {% else %}
-                    <p>练习说明加载中...</p>
-                    {% endif %}
-                </div>
-                {% if tips.tips %}
-                <div class="sidebar-section">
-                    <h3>💡 练习技巧</h3>
-                    <ul class="tips-list">
-                        {% for tip in tips.tips %}
-                        <li>{{ tip }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-            </div>
-
-            <!-- Listen 标签页 -->
-            <div class="tab-content" id="listen-tab">
-                <div class="sidebar-section">
-                    <h3>🎵 参考歌曲</h3>
+                    <h3>💡 AI秘籍</h3>
                     <p style="font-size: 12px; color: var(--hf-text-tertiary); margin-bottom: 12px;">
-                        💡 <strong>Pro Tip:</strong> 以下歌曲可以帮助您更好地识别音程。建议在 <span class="geek-term">网易云音乐</span> 中搜索并添加到歌单。
+                        💡 <strong>Pro Tip:</strong> 以下歌曲可以帮助您更好地识别音程/音阶。建议在 <span class="geek-term">网易云音乐</span> 中搜索并添加到歌单。
                     </p>
-                    {% if songs %}
-                    <ul class="song-list">
-                        {% for interval_name, song_list in songs.items() %}
-                        <li class="song-category">
-                            <strong>{{ interval_name }}：</strong>
-                            <ul style="margin-top: 8px; margin-left: 20px;">
-                                {% for song in song_list %}
-                                <li class="song-item">
-                                    <a href="{{ song.url }}" target="_blank">{{ song.name }}</a>
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <p style="color: var(--text-secondary);">歌曲列表加载中...</p>
+                    
+                    <!-- JSON数据歌曲展示区域 -->
+                    <div id="json-songs-container"></div>
+                    
+                    {% if exercise_type == 'interval' %}
+                    <!-- 音程歌单（从知识库） -->
+                    <div id="interval-songs-kb" style="display: none;">
+                        <div id="current-interval-songs">
+                            <p style="color: var(--text-secondary); font-size: 12px;">
+                                请选择音程后查看参考歌曲
+                            </p>
+                        </div>
+                    </div>
+                    {% elif exercise_type == 'scale_degree' %}
+                    <!-- 音阶歌单（从知识库） -->
+                    <div id="scale-songs-kb" style="display: none;">
+                        <div id="current-scale-songs">
+                            <p style="color: var(--text-secondary); font-size: 12px;">
+                                请选择音阶后查看参考歌曲
+                            </p>
+                        </div>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </aside>
-
-    <!-- 右侧主练习区域 -->
-    <main class="main-practice-area">
-        <div class="practice-header">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                {% if exercise_info.icon.startswith('minecrafts/') or exercise_info.icon.startswith('minecraft/') %}
-                    <img src="{{ url_for('static', filename='images/' + exercise_info.icon) }}" alt="{{ exercise_info.name }}" style="width: 32px; height: 32px; image-rendering: pixelated;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                    <span style="display:none; font-size: 24px;">🎵</span>
-                {% else %}
-                    <span style="font-size: 24px;">{{ exercise_info.icon }}</span>
-                {% endif %}
-                <h1>{{ exercise_info.name }}</h1>
-                <span class="geek-badge" style="font-size: 11px; padding: 4px 8px; background: var(--hf-primary-light); color: var(--hf-primary); border-radius: 12px; font-weight: 500;">
-                    {{ exercise_info.name_en }}
-                </span>
-            </div>
-            <p>{{ exercise_info.description }}</p>
-        </div>
-
-        {% if not current_user.is_authenticated %}
-        <div class="auth-notice">
-            <p>⚠️ 您当前未登录，练习记录不会被保存到数据库。 <a href="{{ url_for('login') }}">登录</a>后可保存统计信息和练习历史。</p>
-        </div>
-        {% endif %}
-        
-        <div class="stats-bar">
-            <div class="stat-item">
-                <span class="stat-label">进度</span>
-                <span class="stat-value" id="progress">0/20</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">得分</span>
-                <span class="stat-value" id="score">0</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">准确率</span>
-                <span class="stat-value" id="accuracy">0%</span>
-            </div>
-        </div>
-
-        <div class="question-area" id="question-area">
-            <div class="loading-state">
-                <div class="loading-spinner"></div>
-                <p>正在加载题目...</p>
-            </div>
-        </div>
-    </main>
 </div>
 
 <script src="{{ url_for('static', filename='js/practice.js') }}"></script>
+
+<!-- 知识库数据 -->
+<script>
+// 将知识库数据传递给JavaScript
+const intervalsKB = {{ intervals_kb | tojson }};
+const scalesKB = {{ scales_kb | tojson }};
+// 加载songs数据
+let songsData = {{ songs_data | tojson }};
+const exerciseType = '{{ exercise_type }}';
+
+// 调试信息
+console.log('知识库数据加载:', {
+    intervals: Object.keys(intervalsKB).length,
+    scales: Object.keys(scalesKB).length,
+    intervalsKB: intervalsKB,
+    scalesKB: scalesKB,
+    songsData: songsData
+});
+
+// 更新音程知识库信息（支持多选）
+function updateIntervalKB() {
+    const checkedBoxes = document.querySelectorAll('input[name="intervals"]:checked');
+    const infoSection = document.getElementById('interval-kb-section');
+    const infoDiv = document.getElementById('current-interval-info');
+    const songsDiv = document.getElementById('current-interval-songs');
+    const songsSection = document.getElementById('interval-songs-kb');
+    
+    if (checkedBoxes.length === 0) {
+        // 没有选中的音程，隐藏显示
+        if (infoSection) infoSection.style.display = 'none';
+        if (songsSection) songsSection.style.display = 'none';
+        return;
+    }
+    
+    // 收集所有选中音程的信息
+    const intervalsInfo = [];
+    const allSongs = [];
+    
+    checkedBoxes.forEach(checkbox => {
+        const intervalName = checkbox.value;
+        const kbInfo = intervalsKB[intervalName];
+        if (kbInfo) {
+            intervalsInfo.push(kbInfo);
+            if (kbInfo.songs && kbInfo.songs.length > 0) {
+                allSongs.push(...kbInfo.songs);
+            }
+        }
+    });
+    
+    if (intervalsInfo.length === 0) {
+        // 没有找到知识库信息
+        if (infoSection) infoSection.style.display = 'none';
+        if (songsSection) songsSection.style.display = 'none';
+        return;
+    }
+    
+    // 显示说明（多个音程一起显示）
+    if (infoSection && infoDiv) {
+        infoSection.style.display = 'block';
+        const intervalsHtml = intervalsInfo.map(kbInfo => {
+            const directionText = kbInfo.direction === 'descending' ? '（下行）' : '（上行）';
+            return `
+                <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                    <div style="margin-bottom: 12px;">
+                        <strong style="color: var(--hf-primary);">${kbInfo.name_zh || kbInfo.name_en}${directionText}</strong>
+                        <span style="color: var(--text-secondary); font-size: 11px; margin-left: 8px;">
+                            ${kbInfo.name_en} ${kbInfo.direction === 'descending' ? '(descending)' : '(ascending)'}
+                        </span>
+                    </div>
+                    <p style="font-size: 13px; line-height: 1.6; color: var(--text-primary);">
+                        ${kbInfo.characteristics_zh || '暂无说明'}
+                    </p>
+                </div>
+            `;
+        }).join('');
+        
+        infoDiv.innerHTML = intervalsHtml;
+    }
+    
+    // 显示歌单（合并所有选中音程的歌曲）
+    if (songsSection && songsDiv) {
+        if (allSongs.length > 0) {
+            // 去重
+            const uniqueSongs = [...new Set(allSongs)];
+            songsSection.style.display = 'block';
+            songsDiv.innerHTML = `
+                <ul class="song-list" style="margin-top: 8px;">
+                    ${uniqueSongs.map(song => `
+                        <li class="song-item" style="margin-bottom: 6px; font-size: 12px;">
+                            ${song}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        } else {
+            songsDiv.innerHTML = '<p style="color: var(--text-secondary); font-size: 12px;">暂无参考歌曲</p>';
+        }
+    }
+}
+
+// 更新音阶知识库信息
+function updateScaleKB(scaleKey) {
+    const kbInfo = scalesKB[scaleKey];
+    const infoDiv = document.getElementById('current-scale-info');
+    const songsDiv = document.getElementById('current-scale-songs');
+    
+    if (kbInfo) {
+        // 显示说明
+        if (infoDiv) {
+            infoDiv.innerHTML = `
+                <div style="margin-bottom: 12px;">
+                    <strong style="color: var(--hf-primary);">${kbInfo.name_zh || kbInfo.name_en}</strong>
+                    <span style="color: var(--text-secondary); font-size: 11px; margin-left: 8px;">
+                        ${kbInfo.name_en}
+                    </span>
+                </div>
+                <p style="font-size: 13px; line-height: 1.6; color: var(--text-primary);">
+                    ${kbInfo.characteristics_zh || '暂无说明'}
+                </p>
+            `;
+        }
+        
+        // 显示歌单
+        if (songsDiv) {
+            if (kbInfo.songs && kbInfo.songs.length > 0) {
+                songsDiv.innerHTML = `
+                    <div style="margin-bottom: 8px;">
+                        <strong style="color: var(--hf-primary);">${kbInfo.name_zh || kbInfo.name_en}</strong>
+                    </div>
+                    <ul class="song-list" style="margin-top: 8px;">
+                        ${kbInfo.songs.map(song => `
+                            <li class="song-item" style="margin-bottom: 6px; font-size: 12px;">
+                                ${song}
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            } else {
+                songsDiv.innerHTML = '<p style="color: var(--text-secondary); font-size: 12px;">暂无参考歌曲</p>';
+            }
+        }
+    } else {
+        if (infoDiv) {
+            infoDiv.innerHTML = '<p style="color: var(--text-secondary); font-size: 12px;">请选择音阶后查看详细信息</p>';
+        }
+        if (songsDiv) {
+            songsDiv.innerHTML = '<p style="color: var(--text-secondary); font-size: 12px;">请选择音阶后查看参考歌曲</p>';
+        }
+    }
+}
+
+// 渲染单个歌曲卡片
+function renderSongCard(song, index, timestamp) {
+    // 优先使用score字段，如果没有则使用functional_score
+    const scoreUrl = (song.score && song.score.trim() !== '') 
+        ? song.score 
+        : (song.functional_score && song.functional_score.trim() !== '') 
+            ? song.functional_score 
+            : null;
+    const hasScore = scoreUrl !== null;
+    const hasAudio = song.audio && song.audio.trim() !== '';
+    const audioId = `audio-${exerciseType}-${timestamp}-${index}`;
+    
+    return `
+        <div class="song-item-card" style="margin-bottom: 16px; padding: 12px; background: var(--bg-secondary, #f9fafb); border: 1px solid var(--border, #e5e7eb); border-radius: 6px; overflow: hidden; word-wrap: break-word;">
+            <div style="margin-bottom: 8px;">
+                <strong style="color: var(--text-primary, #1f2937); font-size: 13px; display: block;">${song.song_name || '未知歌曲'}</strong>
+                ${song.artist ? `<span style="color: var(--text-secondary, #6b7280); font-size: 12px; display: block; margin-top: 4px;">${song.artist}</span>` : ''}
+            </div>
+            ${song.description ? `
+                <p style="font-size: 12px; line-height: 1.5; color: var(--text-primary, #1f2937); margin-bottom: 8px; word-wrap: break-word;">
+                    ${song.description}
+                </p>
+            ` : ''}
+            ${hasScore ? `
+                <div style="margin-bottom: 8px;">
+                    <a href="${scoreUrl.startsWith('http') ? scoreUrl : `/static/${scoreUrl}`}" target="_blank" style="font-size: 12px; color: var(--hf-primary, #3b82f6); text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                        📄 查看乐谱
+                    </a>
+                </div>
+            ` : ''}
+            ${hasAudio ? `
+                <div style="margin-top: 8px; width: 100%;">
+                    <audio id="${audioId}" controls style="width: 100%; height: 32px; max-width: 100%;" data-audio-src="${song.audio}">
+                        您的浏览器不支持音频播放。
+                    </audio>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// 渲染歌曲列表（支持分组显示）
+function renderSongsList(songs, groupedData = null) {
+    // 如果提供了分组数据，按分组显示
+    if (groupedData && Object.keys(groupedData).length > 0) {
+        const timestamp = Date.now();
+        let globalIndex = 0;
+        let html = '';
+        
+        Object.keys(groupedData).forEach((typeName, groupIndex) => {
+            const songs = groupedData[typeName];
+            if (!songs || songs.length === 0) return;
+            
+            // 添加分割线和标题（第一个分组前不加分割线）
+            if (groupIndex > 0) {
+                html += `
+                    <div style="margin: 24px 0 16px 0; border-top: 2px solid var(--border, #e5e7eb);"></div>
+                `;
+            }
+            
+            // 添加类型标题
+            html += `
+                <div style="margin-bottom: 12px;">
+                    <h4 style="font-size: 14px; font-weight: 600; color: var(--text-primary, #1f2937); margin: 0;">
+                        ${typeName}
+                    </h4>
+                </div>
+            `;
+            
+            // 渲染该类型下的所有歌曲
+            songs.forEach((song, songIndex) => {
+                html += renderSongCard(song, globalIndex++, timestamp);
+            });
+        });
+        
+        return html || '<p style="color: var(--text-secondary, #6b7280); font-size: 12px;">暂无参考歌曲</p>';
+    }
+    
+    // 如果没有分组数据，按原来的方式显示（向后兼容）
+    if (!songs || songs.length === 0) {
+        return '<p style="color: var(--text-secondary, #6b7280); font-size: 12px;">暂无参考歌曲</p>';
+    }
+    
+    const timestamp = Date.now();
+    return songs.map((song, index) => renderSongCard(song, index, timestamp)).join('');
+}
+
+// 初始化音频播放器，限制播放1分钟
+function initAudioPlayers() {
+    document.querySelectorAll('audio[data-audio-src]').forEach(audio => {
+        // 如果已经初始化过，跳过
+        if (audio.dataset.initialized === 'true') {
+            return;
+        }
+        
+        const audioSrc = audio.getAttribute('data-audio-src');
+        if (audioSrc && !audio.src) {
+            // 构建音频URL
+            // audioSrc格式可能是 "songs/xxx.mp3" 或完整URL
+            let audioUrl;
+            if (audioSrc.startsWith('http')) {
+                audioUrl = audioSrc;
+            } else if (audioSrc.startsWith('songs/')) {
+                // 如果已经是songs/开头，直接拼接
+                audioUrl = `/static/audio/${audioSrc}`;
+            } else {
+                // 其他情况，也拼接
+                audioUrl = `/static/audio/${audioSrc}`;
+            }
+            
+            // 设置音频源
+            audio.src = audioUrl;
+            
+            // 标记为已初始化
+            audio.dataset.initialized = 'true';
+            
+            // 监听错误事件
+            audio.addEventListener('error', function(e) {
+                console.error('音频加载失败:', audioUrl, e);
+                // 不显示错误，让浏览器默认处理
+            });
+            
+            // 监听timeupdate事件，限制播放1分钟
+            audio.addEventListener('timeupdate', function() {
+                if (this.currentTime >= 60) {
+                    this.pause();
+                    this.currentTime = 60;
+                }
+            });
+        }
+    });
+}
+
+// 更新JSON歌曲显示
+function updateJsonSongsDisplay() {
+    const container = document.getElementById('json-songs-container');
+    if (!container || !songsData) return;
+    
+    // 根据练习类型获取songs数据
+    let groupedSongs = {};
+    
+    if (exerciseType === 'interval') {
+        // 获取选中的音程
+        const checkedBoxes = document.querySelectorAll('input[name="intervals"]:checked');
+        const selectedIntervals = Array.from(checkedBoxes).map(cb => cb.value);
+        
+        if (selectedIntervals.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary, #6b7280); font-size: 12px;">请选择音程后查看参考歌曲</p>';
+            return;
+        }
+        
+        // 音程名称映射
+        const intervalNames = {
+            'minor_second': '小二度',
+            'major_second': '大二度',
+            'minor_third': '小三度',
+            'major_third': '大三度',
+            'perfect_fourth': '纯四度',
+            'tritone': '三全音',
+            'perfect_fifth': '纯五度',
+            'minor_sixth': '小六度',
+            'major_sixth': '大六度',
+            'minor_seventh': '小七度',
+            'major_seventh': '大七度',
+            'octave': '八度',
+            'minor_ninth': '小九度',
+            'major_ninth': '大九度',
+            'minor_tenth': '小十度',
+            'eleventh': '十一度',
+            'major_thirteenth': '大十三度'
+        };
+        
+        selectedIntervals.forEach(intervalName => {
+            if (songsData.interval && songsData.interval[intervalName]) {
+                const intervalCnName = intervalNames[intervalName] || intervalName;
+                groupedSongs[intervalCnName] = songsData.interval[intervalName];
+            }
+        });
+    } else if (exerciseType === 'scale_degree') {
+        // 获取选中的音阶
+        const scaleSelect = document.querySelector('select[name="scale_type"]');
+        const selectedScale = scaleSelect ? scaleSelect.value : 'major';
+        
+        // 音阶名称映射
+        const scaleNames = {
+            'major': '大调',
+            'minor': '小调',
+            'natural_minor': '自然小调',
+            'harmonic_minor': '和声小调',
+            'melodic_minor': '旋律小调',
+            'dorian': '多利亚调式',
+            'mixolydian': '混合利底亚调式',
+            'lydian': '利底亚调式',
+            'phrygian': '弗里几亚调式',
+            'locrian': '洛克里亚调式',
+            'pentatonic_major': '大调五声音阶',
+            'pentatonic_minor': '小调五声音阶',
+            'blues_scale': '布鲁斯音阶',
+            'blues': '布鲁斯音阶',
+            'whole_tone': '全音阶',
+            'diminished': '减音阶'
+        };
+        
+        if (songsData.scale_degree && songsData.scale_degree[selectedScale]) {
+            const scaleCnName = scaleNames[selectedScale] || selectedScale;
+            groupedSongs[scaleCnName] = songsData.scale_degree[selectedScale];
+        }
+    } else if (songsData[exerciseType]) {
+        // 其他练习类型，显示所有songs
+        Object.keys(songsData[exerciseType]).forEach(key => {
+            const songList = songsData[exerciseType][key];
+            if (Array.isArray(songList) && songList.length > 0) {
+                groupedSongs[key] = songList;
+            }
+        });
+    }
+    
+    const totalSongs = Object.values(groupedSongs).reduce((sum, songs) => sum + songs.length, 0);
+    
+    if (totalSongs === 0) {
+        container.innerHTML = '<p style="color: var(--text-secondary, #6b7280); font-size: 12px;">暂无参考歌曲</p>';
+        return;
+    }
+    
+    // 渲染歌曲列表（按类型分组）
+    container.innerHTML = renderSongsList(null, groupedSongs);
+    // 初始化新添加的音频播放器
+    setTimeout(initAudioPlayers, 50);
+}
+
+// 监听音程选择变化
+document.addEventListener('DOMContentLoaded', function() {
+    {% if exercise_type == 'interval' %}
+    // 监听音程复选框变化
+    const intervalCheckboxes = document.querySelectorAll('input[name="intervals"]');
+    intervalCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            // 选择变化时更新所有选中的音程
+            updateIntervalKB();
+            updateJsonSongsDisplay();
+        });
+    });
+    
+    // 默认显示所有选中的音程
+    updateIntervalKB();
+    updateJsonSongsDisplay();
+    {% elif exercise_type == 'scale_degree' %}
+    // 监听音阶选择变化
+    const scaleSelect = document.querySelector('select[name="scale_type"]');
+    if (scaleSelect) {
+        scaleSelect.addEventListener('change', function() {
+            updateScaleKB(this.value);
+            updateJsonSongsDisplay();
+        });
+        
+        // 默认显示当前选中的音阶
+        updateScaleKB(scaleSelect.value);
+        updateJsonSongsDisplay();
+    }
+    {% else %}
+    // 其他练习类型，直接显示
+    updateJsonSongsDisplay();
+    {% endif %}
+    
+    // 使用MutationObserver监听DOM变化，自动初始化新添加的音频播放器
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                initAudioPlayers();
+            }
+        });
+    });
+    
+    // 开始观察
+    const jsonSongsContainer = document.getElementById('json-songs-container');
+    if (jsonSongsContainer) {
+        observer.observe(jsonSongsContainer, {
+            childList: true,
+            subtree: true
+        });
+    }
+    
+    // 初始加载时也初始化
+    setTimeout(initAudioPlayers, 100);
+});
+</script>
 {% endblock %}
 

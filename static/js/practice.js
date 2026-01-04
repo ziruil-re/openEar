@@ -136,9 +136,11 @@ function loadQuestion() {
 function displayQuestion(data) {
     window.currentQuestion = data;
     const questionArea = document.getElementById('question-area');
+    const answersLayout = document.getElementById('answers-layout');
     const exerciseType = window.exerciseType;
     
     let questionHtml = '';
+    let answersHtml = '';
     
     if (exerciseType === 'interval') {
         questionHtml = `
@@ -153,12 +155,16 @@ function displayQuestion(data) {
                     <span>▶️</span> 播放音频
                 </button>
             </div>
-            <div class="options-grid" id="options-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px;">
-                ${data.options.map((option, index) => `
-                    <button class="answer-button" onclick="selectAnswer('${data.option_values[index]}')">
-                        ${option}
-                    </button>
-                `).join('')}
+        `;
+        answersHtml = `
+            <div class="answers-layout-rows-container">
+                <div class="answers-layout-row">
+                    ${data.options.map((option, index) => `
+                        <button class="answer-button" onclick="selectAnswer('${data.option_values[index]}')">
+                            ${option}
+                        </button>
+                    `).join('')}
+                </div>
             </div>
         `;
     } else if (exerciseType === 'scale_degree') {
@@ -194,17 +200,48 @@ function displayQuestion(data) {
                     </div>
                 </div>
             </div>
-            <div class="options-grid" id="options-grid" style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px;">
-                ${data.options.map((option) => `
-                    <button class="answer-button" onclick="selectAnswer('${option}')">
-                        ${option}
-                    </button>
-                `).join('')}
+        `;
+        answersHtml = `
+            <div class="answers-layout-rows-container">
+                <div class="answers-layout-row">
+                    ${data.options.map((option) => `
+                        <button class="answer-button" onclick="selectAnswer('${option}')">
+                            ${option}
+                        </button>
+                    `).join('')}
+                </div>
             </div>
         `;
     }
     
-    questionArea.innerHTML = questionHtml + '<div id="result-message" style="display: none;"></div>';
+    questionArea.innerHTML = questionHtml + '<div id="result-message" class="result-message" style="display: none;"></div>';
+    
+    // 将答案按钮插入到answers-layout中（操作按钮之前）
+    if (answersLayout) {
+        const actionsContainer = answersLayout.querySelector('.exercise-actions-container');
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = answersHtml;
+        const answersContainer = tempDiv.firstElementChild;
+        
+        if (actionsContainer) {
+            // 清除旧的答案按钮
+            const oldAnswers = answersLayout.querySelector('.answers-layout-rows-container');
+            if (oldAnswers) {
+                oldAnswers.remove();
+            }
+            // 在操作按钮之前插入新的答案按钮
+            answersLayout.insertBefore(answersContainer, actionsContainer);
+        } else {
+            // 如果没有操作按钮容器，直接替换内容
+            answersLayout.innerHTML = answersHtml;
+        }
+    }
+    
+    // 重置按钮状态
+    const btnRepeat = document.getElementById('btn-repeat');
+    const btnNext = document.getElementById('btn-next');
+    if (btnRepeat) btnRepeat.disabled = false;
+    if (btnNext) btnNext.disabled = true;
 }
 
 // 选择答案
@@ -258,35 +295,32 @@ function updateStats(isCorrect) {
 // 显示结果
 function showResult(data) {
     const resultDiv = document.getElementById('result-message');
+    if (!resultDiv) return;
+    
     resultDiv.style.display = 'block';
     resultDiv.className = `result-message ${data.is_correct ? 'correct' : 'incorrect'}`;
-    resultDiv.style.padding = '16px';
-    resultDiv.style.marginTop = '16px';
-    resultDiv.style.fontFamily = "'JetBrains Mono', 'Space Mono', monospace";
-    resultDiv.style.fontWeight = '600';
-    resultDiv.style.textAlign = 'center';
-    resultDiv.style.border = '3px solid #000000';
-    resultDiv.style.boxShadow = 'inset 2px 2px 0px rgba(255, 255, 255, 0.5), inset -2px -2px 0px rgba(0, 0, 0, 0.3)';
     
+    // 显示结果
     if (data.is_correct) {
-        resultDiv.style.background = '#10b981';
-        resultDiv.style.color = '#ffffff';
-        resultDiv.style.borderTopColor = '#34d399';
-        resultDiv.style.borderLeftColor = '#34d399';
-        resultDiv.style.borderBottomColor = '#059669';
-        resultDiv.style.borderRightColor = '#059669';
+        resultDiv.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                <span style="font-size: 32px;">✅</span>
+                <div>
+                    <div style="font-size: 18px; font-weight: 700; color: #166534;">正确！</div>
+                </div>
+            </div>
+        `;
     } else {
-        resultDiv.style.background = '#ef4444';
-        resultDiv.style.color = '#ffffff';
-        resultDiv.style.borderTopColor = '#f87171';
-        resultDiv.style.borderLeftColor = '#f87171';
-        resultDiv.style.borderBottomColor = '#dc2626';
-        resultDiv.style.borderRightColor = '#dc2626';
+        resultDiv.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                <span style="font-size: 32px;">❌</span>
+                <div>
+                    <div style="font-size: 18px; font-weight: 700; color: #991b1b;">错误！</div>
+                    <div style="font-size: 13px; opacity: 0.9; margin-top: 2px;">正确答案：<strong>${data.correct_answer}</strong></div>
+                </div>
+            </div>
+        `;
     }
-    
-    resultDiv.innerHTML = data.is_correct 
-        ? `✅ 正确！`
-        : `❌ 错误！正确答案：${data.correct_answer}`;
     
     // 标记正确答案和错误答案
     const selectedAnswer = window.selectedAnswer || '';
@@ -294,20 +328,21 @@ function showResult(data) {
         btn.disabled = true;
         const btnText = btn.textContent.trim();
         if (data.is_correct && btnText === data.correct_answer) {
-            btn.classList.add('correct');
+            btn.classList.add('--right');
         } else if (!data.is_correct) {
             if (btnText === data.correct_answer) {
-                btn.classList.add('correct');
+                btn.classList.add('--right');
             } else if (btnText === selectedAnswer) {
-                btn.classList.add('incorrect');
+                btn.classList.add('--wrong');
             }
         }
     });
     
-    // 2秒后加载下一题
-    setTimeout(() => {
-        loadQuestion();
-    }, 2000);
+    // 启用下一题按钮
+    const btnNext = document.getElementById('btn-next');
+    if (btnNext) {
+        btnNext.disabled = false;
+    }
 }
 
 // 播放音频函数
@@ -318,6 +353,22 @@ function playAudio() {
             console.error('播放失败:', e);
         });
     }
+}
+
+// 重复播放音频
+function repeatAudio() {
+    const audioPlayer = document.getElementById('audioPlayer');
+    if (audioPlayer) {
+        audioPlayer.currentTime = 0;
+        audioPlayer.play().catch(e => {
+            console.error('播放失败:', e);
+        });
+    }
+}
+
+// 下一题
+function nextQuestion() {
+    loadQuestion();
 }
 
 // 页面加载时初始化
@@ -333,6 +384,17 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         sessionStorage.setItem('practice_settings', JSON.stringify(defaultSettings));
     }
+    
+    // 绑定按钮事件
+    const btnRepeat = document.getElementById('btn-repeat');
+    const btnNext = document.getElementById('btn-next');
+    if (btnRepeat) {
+        btnRepeat.addEventListener('click', repeatAudio);
+    }
+    if (btnNext) {
+        btnNext.addEventListener('click', nextQuestion);
+    }
+    
     loadQuestion();
 });
 

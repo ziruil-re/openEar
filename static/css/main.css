@@ -7,55 +7,77 @@
 }
 
 :root {
-    /* Geek风格配色 - 蓝色系 */
-    --hf-primary: #3b82f6;
-    --hf-primary-hover: #2563eb;
-    --hf-primary-light: #dbeafe;
-    --hf-accent: #3b82f6;
-    --hf-accent-light: #dbeafe;
-    --hf-secondary: #6366f1;
-    --hf-success: #10b981;
-    --hf-danger: #ef4444;
-    --hf-warning: #f59e0b;
-    --hf-bg: #ffffff;
-    --hf-bg-secondary: #f9fafb;
-    --hf-bg-tertiary: #f3f4f6;
-    --hf-text-primary: #1f2937;
-    --hf-text-secondary: #6b7280;
-    --hf-text-tertiary: #9ca3af;
-    --hf-border: #e5e7eb;
-    --hf-border-light: #f3f4f6;
-    --hf-radius: 6px;
-    --hf-radius-sm: 4px;
-    --hf-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --hf-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    --hf-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    /* 豆瓣风格配色 - 极简风格 */
+    --primary: #2ec13b;
+    --primary-hover: #27a833;
+    --primary-light: #e8f5e9;
+    --accent: #2ec13b;
+    --accent-light: #e8f5e9;
+    --success: #2ec13b;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --bg: #fbfbfb;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f5f5f5;
+    --text-primary: #313131;
+    --text-secondary: #a0a8a1;
+    --text-tertiary: #c0c0c0;
+    --border: #e5e5e5;
+    --border-light: #f0f0f0;
+    --radius: 8px;
+    --radius-sm: 4px;
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
     
     /* 兼容旧变量 */
-    --primary-color: var(--hf-primary);
-    --primary-hover: var(--hf-primary-hover);
-    --secondary-color: var(--hf-secondary);
-    --success-color: var(--hf-success);
-    --danger-color: var(--hf-danger);
-    --warning-color: var(--hf-warning);
-    --bg-color: var(--hf-bg);
-    --bg-secondary: var(--hf-bg-secondary);
-    --bg-tertiary: var(--hf-bg-tertiary);
-    --text-primary: var(--hf-text-primary);
-    --text-secondary: var(--hf-text-secondary);
-    --text-tertiary: var(--hf-text-tertiary);
-    --border-color: var(--hf-border);
-    --border-radius: var(--hf-radius);
-    --shadow-sm: var(--hf-shadow-sm);
-    --shadow-md: var(--hf-shadow-md);
-    --shadow-lg: var(--hf-shadow-lg);
+    --hf-primary: var(--primary);
+    --hf-primary-hover: var(--primary-hover);
+    --hf-primary-light: var(--primary-light);
+    --hf-accent: var(--accent);
+    --hf-accent-light: var(--accent-light);
+    --hf-secondary: var(--primary);
+    --hf-success: var(--success);
+    --hf-danger: var(--danger);
+    --hf-warning: var(--warning);
+    --hf-bg: var(--bg-secondary);
+    --hf-bg-secondary: var(--bg);
+    --hf-bg-tertiary: var(--bg-tertiary);
+    --hf-text-primary: var(--text-primary);
+    --hf-text-secondary: var(--text-secondary);
+    --hf-text-tertiary: var(--text-tertiary);
+    --hf-border: var(--border);
+    --hf-border-light: var(--border-light);
+    --hf-radius: var(--radius);
+    --hf-radius-sm: var(--radius-sm);
+    --hf-shadow-sm: var(--shadow-sm);
+    --hf-shadow-md: var(--shadow-md);
+    --hf-shadow-lg: var(--shadow-lg);
+    
+    --primary-color: var(--primary);
+    --primary-hover: var(--primary-hover);
+    --secondary-color: var(--primary);
+    --success-color: var(--success);
+    --danger-color: var(--danger);
+    --warning-color: var(--warning);
+    --bg-color: var(--bg-secondary);
+    --bg-secondary: var(--bg);
+    --bg-tertiary: var(--bg-tertiary);
+    --text-primary: var(--text-primary);
+    --text-secondary: var(--text-secondary);
+    --text-tertiary: var(--text-tertiary);
+    --border-color: var(--border);
+    --border-radius: var(--radius);
+    --shadow-sm: var(--shadow-sm);
+    --shadow-md: var(--shadow-md);
+    --shadow-lg: var(--shadow-lg);
 }
 
 body {
-    font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
-    background: var(--hf-bg-secondary);
-    color: var(--hf-text-primary);
-    line-height: 1.5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    line-height: 1.6;
     min-height: 100vh;
     font-size: 14px;
     -webkit-font-smoothing: antialiased;
@@ -162,8 +184,10 @@ body {
 /* 练习页面布局 */
 .practice-layout {
     display: flex;
-    gap: 16px;
-    height: calc(100vh - 80px);
+    gap: 8px;
+    height: calc(100vh - 64px);
+    padding: 8px;
+    padding-bottom: 0;
 }
 
 /* 左侧边栏 - Hugging Face风格 */
@@ -177,6 +201,17 @@ body {
     overflow: hidden;
     box-shadow: var(--hf-shadow-sm);
     flex-shrink: 0;
+}
+
+/* 确保桌面端保持水平布局 */
+@media (min-width: 769px) {
+    .practice-layout {
+        flex-direction: row !important;
+    }
+    
+    .sidebar {
+        max-height: none !important;
+    }
 }
 
 .sidebar-tabs {
@@ -246,12 +281,15 @@ body {
     border-radius: var(--hf-radius);
     border: 1px solid var(--hf-border);
     padding: 24px;
+    padding-bottom: 24px;
     display: flex;
     flex-direction: column;
     box-shadow: var(--hf-shadow-sm);
     overflow-y: auto;
     min-width: 0;
+    position: relative;
 }
+
 
 .practice-header {
     margin-bottom: 24px;
@@ -328,19 +366,39 @@ body {
     background: var(--hf-bg-secondary);
     border-color: var(--hf-primary);
     color: var(--hf-primary);
-    transform: none;
+    transform: translateY(-1px);
+    box-shadow: var(--hf-shadow-md);
+}
+
+.option-btn:active {
+    transform: translateY(0);
+    box-shadow: var(--hf-shadow-sm);
 }
 
 .option-btn.correct {
     background: #ecfdf5;
     border-color: var(--hf-success);
     color: #065f46;
+    animation: correctPulse 0.3s ease;
 }
 
 .option-btn.incorrect {
     background: #fef2f2;
     border-color: var(--hf-danger);
     color: #991b1b;
+    animation: incorrectShake 0.4s ease;
+}
+
+@keyframes correctPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes incorrectShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
 }
 
 .option-btn:disabled {
@@ -364,26 +422,65 @@ body {
 .checkbox-item {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: 8px;
+    padding: 8px 12px;
     background: var(--hf-bg-secondary);
     border-radius: var(--hf-radius-sm);
-    border: 1px solid var(--hf-border);
+    border: 2px solid var(--hf-border);
     cursor: pointer;
     transition: all 0.15s ease;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--hf-text-primary);
 }
 
 .checkbox-item:hover {
     background: var(--hf-bg-tertiary);
     border-color: var(--hf-primary);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
 }
 
 .checkbox-item input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
-    accent-color: var(--hf-primary);
+    width: 18px;
+    height: 18px;
+    accent-color: #6b7280;
     cursor: pointer;
+    flex-shrink: 0;
+}
+
+.checkbox-item input[type="checkbox"]:checked {
+    accent-color: #6b7280;
+}
+
+.form-select {
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 500;
+    border: 2px solid var(--hf-border);
+    border-radius: var(--hf-radius);
+    background: var(--hf-bg);
+    color: var(--hf-text-primary);
+    transition: all 0.15s ease;
+    cursor: pointer;
+}
+
+.form-select:hover {
+    border-color: var(--hf-primary);
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--hf-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--hf-text-primary);
+    margin-bottom: 8px;
+    display: block;
 }
 
 /* 歌曲列表 */
@@ -563,81 +660,243 @@ body {
     text-decoration: underline;
 }
 
-/* 响应式设计 */
-@media (max-width: 1024px) {
+/* 响应式设计 - 优化移动端体验 */
+@media (max-width: 768px) {
+    /* 移动端导航栏 - 更紧凑 */
+    .navbar {
+        padding: 0 12px;
+        height: 52px;
+    }
+    
+    .nav-center {
+        display: flex;
+        gap: 8px;
+        margin-left: 8px;
+    }
+    
+    .nav-center .nav-link {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+    
+    .nav-right {
+        gap: 6px;
+    }
+    
+    .nav-right .nav-link {
+        font-size: 12px;
+        padding: 4px 6px;
+    }
+    
+    .nav-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+    }
+    
+    .main-content {
+        padding: 12px;
+    }
+    
+    /* 练习页面布局 - 移动端垂直布局 */
     .practice-layout {
         flex-direction: column;
         height: auto;
+        min-height: calc(100vh - 52px);
+        padding: 8px;
+        gap: 12px;
     }
     
     .sidebar {
         width: 100%;
-        max-height: 400px;
+        max-height: 50vh;
+        order: 2; /* 移动端时侧边栏在下方 */
     }
     
     .main-practice-area {
-        min-height: 500px;
-    }
-}
-
-@media (max-width: 768px) {
-    /* 移动端导航栏 - 显示链接但更紧凑 */
-    .nav-center {
-        display: flex;
-        gap: 12px;
-        margin-left: 12px;
+        min-height: auto;
+        order: 1; /* 移动端时主区域在上方 */
+        padding: 16px;
     }
     
-    .nav-center .nav-link {
-        font-size: 13px;
-        padding: 4px 8px;
-    }
-    
-    .nav-right {
-        gap: 8px;
-    }
-    
-    .nav-right .nav-link {
-        font-size: 13px;
-        padding: 4px 8px;
-    }
-    
-    .nav-btn {
-        padding: 4px 10px;
-        font-size: 13px;
-    }
-    
-    .main-content {
-        padding: 16px 12px;
-    }
-    
+    /* 选项网格 - 移动端单列 */
     .options-grid {
         grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .option-btn {
+        min-height: 44px; /* iOS推荐的最小触摸目标 */
+        padding: 12px 16px;
+        font-size: 14px;
     }
     
     .practice-header h1 {
         font-size: 18px;
     }
+    
+    .practice-header p {
+        font-size: 12px;
+    }
+    
+    /* 统计栏 - 移动端更紧凑 */
+    .stats-bar {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 10px 12px;
+    }
+    
+    .stat-item {
+        flex: 1;
+        min-width: 80px;
+    }
+    
+    /* 按钮 - 移动端更大触摸目标 */
+    .btn {
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    /* 表单元素 - 移动端优化 */
+    .form-select {
+        min-height: 44px;
+        font-size: 14px;
+    }
+    
+    .checkbox-item {
+        min-height: 44px;
+        padding: 10px 12px;
+    }
 }
 
-/* 滚动条样式 */
+/* 超小屏幕优化（手机竖屏） */
+@media (max-width: 480px) {
+    .navbar {
+        height: 48px;
+    }
+    
+    .nav-logo {
+        font-size: 14px;
+    }
+    
+    .logo-icon {
+        font-size: 18px;
+    }
+    
+    .nav-center {
+        gap: 4px;
+        margin-left: 4px;
+    }
+    
+    .nav-center .nav-link {
+        font-size: 11px;
+        padding: 4px;
+    }
+    
+    .main-content {
+        padding: 8px;
+    }
+    
+    .practice-layout {
+        padding: 4px;
+        gap: 8px;
+    }
+    
+    .main-practice-area {
+        padding: 12px;
+    }
+    
+    .practice-header h1 {
+        font-size: 16px;
+    }
+    
+    .stats-bar {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .stat-item {
+        width: 100%;
+    }
+}
+
+/* 滚动条样式 - 优化 */
 .sidebar-content::-webkit-scrollbar,
 .main-practice-area::-webkit-scrollbar {
-    width: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 .sidebar-content::-webkit-scrollbar-track,
 .main-practice-area::-webkit-scrollbar-track {
     background: var(--hf-bg-secondary);
+    border-radius: 4px;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb,
 .main-practice-area::-webkit-scrollbar-thumb {
     background: var(--hf-border);
-    border-radius: 3px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
 }
 
 .sidebar-content::-webkit-scrollbar-thumb:hover,
 .main-practice-area::-webkit-scrollbar-thumb:hover {
     background: var(--hf-text-tertiary);
+}
+
+/* 移动端隐藏滚动条但保持滚动功能 */
+@media (max-width: 768px) {
+    .sidebar-content::-webkit-scrollbar,
+    .main-practice-area::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+    }
+}
+
+/* 触摸优化 - 防止双击缩放 */
+@media (max-width: 768px) {
+    * {
+        -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+        touch-action: manipulation;
+    }
+    
+    button, .btn, .option-btn, .checkbox-item {
+        -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
+    }
+}
+
+/* 加载动画优化 */
+.loading-spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 淡入动画 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.question-area > * {
+    animation: fadeIn 0.3s ease;
+}
+
+/* 平滑过渡 */
+* {
+    transition-property: background-color, border-color, color, transform, box-shadow;
+    transition-duration: 0.15s;
+    transition-timing-function: ease;
 }

@@ -166,14 +166,15 @@
 }
 
 .exercise-item-icon {
-    width: 40px;
-    height: 40px;
+    width: 48px; /* 对比：更大的图标（从40px增加到48px） */
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     filter: none;
     opacity: 1;
+    transition: all 0.2s ease;
 }
 
 .exercise-item-icon img {
@@ -181,6 +182,15 @@
     height: 100%;
     object-fit: contain;
     image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    transition: all 0.2s ease;
+}
+
+/* 练习卡片hover时图标效果 */
+.exercise-item:hover .exercise-item-icon img {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
 }
 
 .exercise-item-content {
@@ -368,12 +378,7 @@
             <a href="{{ url_for('practice', exercise_type=type_key) }}" class="exercise-item">
                 <div class="exercise-item-header">
                     <span class="exercise-item-icon">
-                        {% if exercise.icon.startswith('minecrafts/') or exercise.icon.startswith('minecraft/') %}
-                            <img src="{{ url_for('static', filename='images/' + exercise.icon) }}" alt="{{ exercise.name }}" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                            <span style="display:none;">🎵</span>
-                        {% else %}
-                            {{ exercise.icon }}
-                        {% endif %}
+                        {{ exercise.icon }}
                     </span>
                     <div class="exercise-item-content">
                         <span class="exercise-item-name">Earcraft/{{ exercise.name }}</span>
